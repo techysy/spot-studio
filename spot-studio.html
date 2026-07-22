@@ -346,7 +346,6 @@
             line-height: 1.5;
         }
 
-        .rider-controls { display: flex; flex-direction: column; gap: 12px; }
         .speed-input { display: flex; align-items: center; gap: 8px; }
         .speed-input label { font-size: 0.85em; color: var(--text-secondary); }
         .speed-input input {
@@ -355,13 +354,6 @@
         }
         .speed-input input:focus { border-color: var(--accent); }
         .speed-input .unit { font-size: 0.8em; color: var(--text-muted); }
-        .rider-buttons { display: flex; gap: 8px; }
-        .rider-info { margin-top: 12px; }
-        .rider-progress { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
-        .rider-progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-light)); border-radius: 3px; width: 0%; transition: width 0.1s linear; }
-        .rider-stats { display: flex; justify-content: space-between; font-size: 0.8em; color: var(--text-secondary); }
-        .rider-eta { margin-top: 8px; padding: 8px 12px; background: var(--bg); border-radius: 8px; font-size: 0.82em; color: var(--text-secondary); }
-        .rider-eta strong { color: var(--accent); }
 
         .poi-section { grid-column: 1 / -1; }
         .poi-map-toolbar {
@@ -594,7 +586,6 @@
             <button class="color-mode-btn active" data-mode="none">无</button>
             <button class="color-mode-btn" data-mode="elevation">海拔</button>
             <button class="color-mode-btn" data-mode="slope">坡度</button>
-            <button class="color-mode-btn" data-mode="speed">速度</button>
         </div>
     </div>
     <div class="color-legend" id="color-legend">
@@ -727,27 +718,13 @@
     </div>
 
     <div class="detail-card">
-        <h3>🚴 电子骑友</h3>
-        <div class="rider-controls">
-            <div class="speed-input">
-                <label>匀速</label>
-                <input type="number" id="rider-speed" value="25" min="5" max="60" step="1">
-                <span class="unit">km/h</span>
-            </div>
-            <div class="rider-buttons">
-                <button class="btn btn-primary" id="rider-start" disabled>▶ 出发</button>
-                <button class="btn btn-secondary" id="rider-pause" disabled>⏸ 暂停</button>
-                <button class="btn btn-secondary" id="rider-reset" disabled>↺ 重置</button>
-            </div>
+        <h3>⚙️ 速度设置</h3>
+        <div class="speed-input" style="margin-top:8px;">
+            <label>平均速度</label>
+            <input type="number" id="avg-speed" value="25" min="5" max="60" step="1">
+            <span class="unit">km/h</span>
         </div>
-        <div class="rider-info" id="rider-info">
-            <div class="rider-progress"><div class="rider-progress-bar" id="rider-progress-bar"></div></div>
-            <div class="rider-stats">
-                <span id="rider-distance">0.00 / 0.00 km</span>
-                <span id="rider-time">00:00:00</span>
-            </div>
-            <div class="rider-eta" id="rider-eta">上传 GPX 后可模拟骑行</div>
-        </div>
+        <div style="margin-top:8px;font-size:0.78em;color:var(--text-muted);">用于计算预估时长</div>
     </div>
 
     <div class="detail-card">
@@ -949,18 +926,6 @@
                 const grade = dist > 0 ? ((points[i].ele - points[i-1].ele) / dist) * 100 : 0;
                 values.push(grade);
             }
-        } else if (colorMode === 'speed') {
-            values = [];
-            for (let i = 0; i < points.length; i++) {
-                if (i === 0) { values.push(0); continue; }
-                const dist = haversine(points[i-1], points[i]);
-                let speed = 0;
-                if (points[i].time && points[i-1].time && dist > 0) {
-                    const dt = (points[i].time - points[i-1].time) / 1000;
-                    if (dt > 0) speed = (dist / dt) * 3.6;
-                }
-                values.push(speed);
-            }
         }
 
         const minVal = Math.min(...values);
@@ -1026,11 +991,6 @@
             title.textContent = '坡度';
             minLabel.textContent = '-15%';
             maxLabel.textContent = '+15%';
-            bar.style.background = 'linear-gradient(to right, hsl(240,80%,50%), hsl(180,80%,50%), hsl(120,80%,50%), hsl(60,80%,50%), hsl(0,80%,50%))';
-        } else if (mode === 'speed') {
-            title.textContent = '速度';
-            minLabel.textContent = Math.round(minVal) + 'km/h';
-            maxLabel.textContent = Math.round(maxVal) + 'km/h';
             bar.style.background = 'linear-gradient(to right, hsl(240,80%,50%), hsl(180,80%,50%), hsl(120,80%,50%), hsl(60,80%,50%), hsl(0,80%,50%))';
         }
     }
@@ -1315,8 +1275,8 @@
     function updateStats(gpxResult) {
         const distKm = (gpxResult.totalDistance / 1000).toFixed(2);
         const eleGain = Math.round(gpxResult.totalElevationGain);
-        const defaultSpeed = 25;
-        const durationSec = gpxResult.totalDistance / (defaultSpeed * 1000 / 3600);
+        const avgSpeed = parseInt(document.getElementById('avg-speed').value) || 25;
+        const durationSec = gpxResult.totalDistance / (avgSpeed * 1000 / 3600);
 
         const h = Math.floor(durationSec / 3600);
         const m = Math.floor((durationSec % 3600) / 60);
@@ -1353,7 +1313,6 @@
         document.getElementById('editor-toolbar').classList.add('show');
         document.getElementById('coords-display').classList.add('show');
         updateWithFilter();
-        enableRider();
         updateTrackList();
 
         document.getElementById('download-btn').disabled = false;
@@ -1476,149 +1435,6 @@
             windowValue.textContent = smoothWindow;
             if (state.rawPoints.length > 0) updateWithFilter();
         });
-    }
-
-    const rider = {
-        marker: null,
-        isRunning: false,
-        startTime: null,
-        elapsed: 0,
-        speed: 25,
-        animId: null,
-        cumulativeDists: [],
-        totalDist: 0
-    };
-
-    function precomputeDists() {
-        rider.cumulativeDists = [0];
-        let total = 0;
-        for (let i = 1; i < state.gpxPoints.length; i++) {
-            total += haversine(state.gpxPoints[i - 1], state.gpxPoints[i]);
-            rider.cumulativeDists.push(total);
-        }
-        rider.totalDist = total;
-    }
-
-    function getPositionOnTrack(targetDist) {
-        const pts = state.gpxPoints;
-        const cd = rider.cumulativeDists;
-        for (let i = 1; i < pts.length; i++) {
-            if (cd[i] >= targetDist) {
-                const segDist = cd[i] - cd[i - 1];
-                const ratio = segDist === 0 ? 0 : (targetDist - cd[i - 1]) / segDist;
-                return {
-                    lat: pts[i - 1].lat + (pts[i].lat - pts[i - 1].lat) * ratio,
-                    lon: pts[i - 1].lon + (pts[i].lon - pts[i - 1].lon) * ratio
-                };
-            }
-        }
-        return { lat: pts[pts.length - 1].lat, lon: pts[pts.length - 1].lon };
-    }
-
-    function formatTime(sec) {
-        const h = Math.floor(sec / 3600);
-        const m = Math.floor((sec % 3600) / 60);
-        const s = Math.floor(sec % 60);
-        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    }
-
-    function updateRiderUI(distMeters, elapsedSec) {
-        const distKm = distMeters / 1000;
-        const totalKm = rider.totalDist / 1000;
-        const progress = Math.min(distMeters / rider.totalDist * 100, 100);
-
-        document.getElementById('rider-progress-bar').style.width = progress + '%';
-        document.getElementById('rider-distance').textContent = `${distKm.toFixed(2)} / ${totalKm.toFixed(2)} km`;
-        document.getElementById('rider-time').textContent = formatTime(elapsedSec);
-
-        if (distMeters < rider.totalDist && rider.speed > 0) {
-            const remaining = (rider.totalDist - distMeters) / (rider.speed * 1000 / 3600);
-            document.getElementById('rider-eta').innerHTML = `预计还需 <strong>${formatTime(remaining)}</strong> 到达终点`;
-        }
-    }
-
-    function animateRider() {
-        if (!rider.isRunning) return;
-        rider.elapsed = performance.now() - rider.startTime;
-        const elapsedSec = rider.elapsed / 1000;
-        const distMeters = rider.speed * 1000 / 3600 * elapsedSec;
-
-        if (distMeters >= rider.totalDist) {
-            const pos = getPositionOnTrack(rider.totalDist);
-            rider.marker.setLatLng([pos.lat, pos.lon]);
-            updateRiderUI(rider.totalDist, elapsedSec);
-            rider.isRunning = false;
-            document.getElementById('rider-start').disabled = true;
-            document.getElementById('rider-pause').disabled = true;
-            document.getElementById('rider-eta').innerHTML = '<strong>已到达终点！</strong>';
-            rider.marker.setPopupContent('🚴 电子骑友<br>已到达终点!').openPopup();
-            return;
-        }
-
-        const pos = getPositionOnTrack(distMeters);
-        rider.marker.setLatLng([pos.lat, pos.lon]);
-        rider.marker.setPopupContent(`🚴 电子骑友<br>${(distMeters / 1000).toFixed(2)} km`);
-        updateRiderUI(distMeters, elapsedSec);
-        rider.animId = requestAnimationFrame(animateRider);
-    }
-
-    function startRider() {
-        if (!state.gpxPoints.length) return;
-        if (!rider.marker) {
-            const icon = L.divIcon({
-                html: '<div style="font-size:28px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🚴</div>',
-                iconSize: [32, 32], iconAnchor: [16, 16], className: ''
-            });
-            rider.marker = L.marker(state.gpxPoints[0], { icon }).addTo(state.map).bindPopup('🚴 电子骑友');
-        }
-        rider.speed = parseInt(document.getElementById('rider-speed').value) || 25;
-        rider.isRunning = true;
-        rider.startTime = performance.now() - rider.elapsed;
-        document.getElementById('rider-start').disabled = true;
-        document.getElementById('rider-pause').disabled = false;
-        document.getElementById('rider-reset').disabled = false;
-        animateRider();
-    }
-
-    function pauseRider() {
-        rider.isRunning = false;
-        rider.elapsed = performance.now() - rider.startTime;
-        if (rider.animId) cancelAnimationFrame(rider.animId);
-        document.getElementById('rider-start').disabled = false;
-        document.getElementById('rider-pause').disabled = true;
-    }
-
-    function resetRider() {
-        rider.isRunning = false;
-        rider.elapsed = 0;
-        if (rider.animId) cancelAnimationFrame(rider.animId);
-        if (rider.marker) rider.marker.setLatLng(state.gpxPoints[0]);
-        document.getElementById('rider-start').disabled = false;
-        document.getElementById('rider-pause').disabled = true;
-        document.getElementById('rider-reset').disabled = true;
-        document.getElementById('rider-progress-bar').style.width = '0%';
-        const totalKm = rider.totalDist / 1000;
-        document.getElementById('rider-distance').textContent = `0.00 / ${totalKm.toFixed(2)} km`;
-        document.getElementById('rider-time').textContent = '00:00:00';
-        const etaMin = (rider.totalDist / (rider.speed * 1000 / 3600)) / 60;
-        document.getElementById('rider-eta').innerHTML = `全程约 <strong>${etaMin.toFixed(0)}</strong> 分钟（匀速 ${rider.speed} km/h）`;
-    }
-
-    function initVirtualRider() {
-        document.getElementById('rider-start').addEventListener('click', startRider);
-        document.getElementById('rider-pause').addEventListener('click', pauseRider);
-        document.getElementById('rider-reset').addEventListener('click', resetRider);
-        document.getElementById('rider-speed').addEventListener('change', function () {
-            rider.speed = parseInt(this.value) || 25;
-        });
-    }
-
-    function enableRider() {
-        precomputeDists();
-        document.getElementById('rider-start').disabled = false;
-        document.getElementById('rider-reset').disabled = false;
-        const etaMin = (rider.totalDist / (rider.speed * 1000 / 3600)) / 60;
-        document.getElementById('rider-eta').innerHTML = `全程约 <strong>${etaMin.toFixed(0)}</strong> 分钟（匀速 ${rider.speed} km/h）`;
     }
 
     const POI_TYPES = {
@@ -1950,7 +1766,6 @@
                 state.rawPoints[action.index] = action.oldPoint;
             }
             updateWithFilter();
-            enableRider();
             updateUndoRedoButtons();
         });
 
@@ -1966,7 +1781,6 @@
                 state.rawPoints[action.index] = action.newPoint;
             }
             updateWithFilter();
-            enableRider();
             updateUndoRedoButtons();
         });
 
@@ -2001,7 +1815,7 @@
                 state.redoStack = [];
                 state.rawPoints.splice(insertIdx, 0, { lat: e.latlng.lat, lon: e.latlng.lng, ele: 0, time: null });
                 updateWithFilter();
-                enableRider();
+
                 updateUndoRedoButtons();
             }
         });
@@ -2035,7 +1849,7 @@
                 state.rawPoints[idx].lat = newLat;
                 state.rawPoints[idx].lon = newLng;
                 updateWithFilter();
-                enableRider();
+
                 updateUndoRedoButtons();
             });
             marker.on('click', function(e) {
@@ -2046,7 +1860,7 @@
                 state.redoStack = [];
                 state.rawPoints.splice(idx, 1);
                 updateWithFilter();
-                enableRider();
+
                 updateUndoRedoButtons();
                 showEditHandles();
             });
@@ -2205,7 +2019,6 @@
         initRouteLinks();
         initShare();
         initFilterControls();
-        initVirtualRider();
         initPoi();
         initColorMode();
         initDistanceMarkers();
@@ -2215,6 +2028,13 @@
         initEditorToolbar();
         initElevationInteraction();
         updateUndoRedoButtons();
+
+        document.getElementById('avg-speed').addEventListener('change', function() {
+            if (state.gpxPoints.length > 0) updateStats({
+                totalDistance: state.totalDistance,
+                totalElevationGain: state.totalElevationGain
+            });
+        });
     }
 
     if (document.readyState === 'loading') {
