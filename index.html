@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>骑行活动发布</title>
+    <meta property="og:title" content="骑行活动发布">
+    <meta property="og:description" content="骑行活动详情与GPX轨迹">
+    <meta property="og:type" content="website">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --primary: #311e3e;
+            --accent: #87314e;
+            --accent-light: #a84064;
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --text: #1d1d1f;
+            --text-secondary: #636e72;
+            --text-muted: #95a5a6;
+            --border: #e8e8e8;
+            --radius: 16px;
+            --shadow: 0 4px 24px rgba(0,0,0,0.06);
+            --shadow-hover: 0 8px 32px rgba(0,0,0,0.12);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            padding: 48px 24px 40px;
+            text-align: center;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 70%, rgba(255,255,255,0.08) 0%, transparent 50%);
+        }
+        .hero-title {
+            font-size: 2.4em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            outline: none;
+            min-height: 1.2em;
+        }
+        .hero-title:empty::before {
+            content: '点击输入骑行活动标题';
+            opacity: 0.5;
+        }
+        .hero-meta {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            font-size: 0.95em;
+            opacity: 0.9;
+            position: relative;
+        }
+        .hero-meta span { display: flex; align-items: center; gap: 6px; }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+
+        .map-section {
+            margin: -20px auto 0;
+            max-width: 1100px;
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+        }
+        #map {
+            width: 100%;
+            height: 55vh;
+            min-height: 380px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            background: #e8e8e8;
+        }
+        .map-hint {
+            text-align: center;
+            padding: 12px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .elevation-section {
+            max-width: 1100px;
+            margin: 16px auto 0;
+            padding: 0 20px;
+        }
+        .elevation-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            display: none;
+        }
+        .elevation-card.show { display: block; }
+        .elevation-title {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+        #elevation-chart {
+            width: 100%;
+            height: 140px;
+            display: block;
+        }
+
+        .stats-section {
+            max-width: 1100px;
+            margin: 20px auto 0;
+            padding: 0 20px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+        .stat-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 22px 16px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+        .stat-icon { font-size: 1.6em; margin-bottom: 8px; }
+        .stat-value { font-size: 1.8em; font-weight: 700; color: var(--accent); display: block; line-height: 1.2; }
+        .stat-label { font-size: 0.8em; color: var(--text-secondary); margin-top: 4px; display: block; }
+
+        .details-section {
+            max-width: 1100px;
+            margin: 24px auto 0;
+            padding: 0 20px 60px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .detail-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+        }
+        .detail-card h3 {
+            font-size: 0.95em;
+            color: var(--text-secondary);
+            margin-bottom: 14px;
+            font-weight: 600;
+        }
+        .description {
+            min-height: 80px;
+            outline: none;
+            line-height: 1.7;
+            color: var(--text);
+        }
+        .description:empty::before {
+            content: '点击编辑活动描述...';
+            color: var(--text-muted);
+        }
+
+        .route-links { display: flex; flex-wrap: wrap; gap: 10px; }
+        .route-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        .route-link:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+        .route-link .icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75em;
+            font-weight: 700;
+            color: #fff;
+        }
+        .route-link.strava .icon { background: #FC4C02; }
+        .route-link.igp .icon { background: #00AEEF; }
+        .route-link.garmin .icon { background: #000; }
+
+        .gpx-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            font-size: 0.9em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: var(--accent-light); transform: translateY(-1px); }
+        .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .social-links { display: flex; flex-wrap: wrap; gap: 10px; }
+        .social-link {
+            padding: 10px 16px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.85em;
+            font-weight: 500;
+            color: #fff;
+            transition: all 0.2s;
+        }
+        .social-link:hover { transform: translateY(-1px); opacity: 0.9; }
+        .social-link.weibo { background: #E6162D; }
+        .social-link.wechat { background: #07C160; }
+        .social-link.twitter { background: #1DA1F2; }
+        .social-link.copy-link { background: var(--text-secondary); }
+
+        .gpx-info {
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--bg);
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            display: none;
+        }
+        .gpx-info.show { display: block; }
+
+        .link-input-group { display: flex; flex-direction: column; gap: 10px; }
+        .link-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .link-input label {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            min-width: 70px;
+        }
+        .link-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.85em;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .link-input input:focus { border-color: var(--accent); }
+
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--accent);
+            background: rgba(135,49,78,0.03);
+        }
+        .upload-zone-icon { font-size: 2em; margin-bottom: 8px; }
+        .upload-zone-text { color: var(--text-secondary); font-size: 0.9em; }
+
+        .filter-controls {
+            margin-top: 14px;
+            padding: 14px;
+            background: var(--bg);
+            border-radius: 10px;
+        }
+        .filter-controls.hidden { display: none; }
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .filter-row:last-child { margin-bottom: 0; }
+        .filter-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.88em;
+            font-weight: 500;
+            user-select: none;
+        }
+        .filter-toggle input[type="checkbox"] {
+            accent-color: var(--accent);
+            width: 16px;
+            height: 16px;
+        }
+        .filter-slider-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+        .filter-slider-group label {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        .filter-slider-group input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent);
+            height: 4px;
+        }
+        .filter-slider-group .value {
+            font-size: 0.82em;
+            font-weight: 600;
+            color: var(--accent);
+            min-width: 32px;
+            text-align: right;
+        }
+        .filter-hint {
+            font-size: 0.76em;
+            color: var(--text-muted);
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        .rider-controls { display: flex; flex-direction: column; gap: 12px; }
+        .speed-input { display: flex; align-items: center; gap: 8px; }
+        .speed-input label { font-size: 0.85em; color: var(--text-secondary); }
+        .speed-input input {
+            width: 56px; padding: 5px 8px; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 0.9em; text-align: center; outline: none;
+        }
+        .speed-input input:focus { border-color: var(--accent); }
+        .speed-input .unit { font-size: 0.8em; color: var(--text-muted); }
+        .rider-buttons { display: flex; gap: 8px; }
+        .rider-info { margin-top: 12px; }
+        .rider-progress { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+        .rider-progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-light)); border-radius: 3px; width: 0%; transition: width 0.1s linear; }
+        .rider-stats { display: flex; justify-content: space-between; font-size: 0.8em; color: var(--text-secondary); }
+        .rider-eta { margin-top: 8px; padding: 8px 12px; background: var(--bg); border-radius: 8px; font-size: 0.82em; color: var(--text-secondary); }
+        .rider-eta strong { color: var(--accent); }
+
+        .poi-section { grid-column: 1 / -1; }
+        .poi-map-toolbar {
+            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            z-index: 1000; display: none;
+        }
+        .poi-map-toolbar.show { display: block; }
+        .poi-map-toolbar-inner {
+            display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px;
+            background: rgba(255,255,255,0.95); border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15); backdrop-filter: blur(8px);
+        }
+        .poi-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .poi-btn {
+            padding: 7px 14px; border-radius: 8px; border: 1.5px solid var(--border);
+            background: var(--card); cursor: pointer; font-size: 0.82em;
+            display: flex; align-items: center; gap: 5px; transition: all 0.2s;
+            user-select: none;
+        }
+        .poi-btn:hover { border-color: var(--accent); }
+        .poi-btn.active { border-color: var(--accent); background: rgba(135,49,78,0.08); color: var(--accent); font-weight: 600; }
+        .poi-btn .poi-emoji { font-size: 1.1em; }
+        .poi-hint { font-size: 0.78em; color: var(--text-muted); margin-bottom: 10px; }
+        .poi-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+        .poi-item {
+            display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+            background: var(--bg); border-radius: 8px; font-size: 0.82em;
+        }
+        .poi-item .poi-type { font-size: 1.1em; flex-shrink: 0; }
+        .poi-item .poi-name { flex: 1; color: var(--text); }
+        .poi-item .poi-del {
+            width: 22px; height: 22px; border-radius: 50%; border: none;
+            background: #fee; color: #c0392b; cursor: pointer; font-size: 0.75em;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0.5; transition: opacity 0.2s;
+        }
+        .poi-item .poi-del:hover { opacity: 1; }
+        .poi-empty { font-size: 0.82em; color: var(--text-muted); padding: 12px 0; text-align: center; }
+        .poi-actions { display: flex; gap: 8px; margin-top: 10px; }
+        .poi-actions .btn { font-size: 0.78em; padding: 6px 12px; }
+        .filter-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.72em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .filter-badge.active { background: #d4edda; color: #155724; }
+        .filter-badge.inactive { background: #f0f0f0; color: #888; }
+
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.8em;
+        }
+
+        .leaflet-control-zoom a {
+            border-radius: 8px !important;
+        }
+        .layer-switcher {
+            position: absolute; top: 12px; right: 12px; z-index: 1000;
+            background: rgba(255,255,255,0.95); border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15); display: none;
+            overflow: hidden;
+        }
+        .layer-switcher.show { display: block; }
+        .layer-btn {
+            display: block; width: 100%; padding: 7px 14px; border: none;
+            background: transparent; font-size: 0.8em; cursor: pointer;
+            color: var(--text-secondary); text-align: left; white-space: nowrap;
+            transition: all 0.15s;
+        }
+        .layer-btn.active { background: var(--accent); color: #fff; font-weight: 600; }
+        .layer-btn:hover:not(.active) { background: #f0f0f0; }
+
+        @media (max-width: 768px) {
+            .hero { padding: 36px 16px 32px; }
+            .hero-title { font-size: 1.6em; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .details-section { grid-template-columns: 1fr; }
+            #map { height: 45vh; min-height: 300px; }
+            .stat-value { font-size: 1.4em; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="hero">
+    <div class="hero-title" contenteditable="true" id="title"></div>
+    <div class="hero-meta">
+        <span id="date-display">📅</span>
+        <span id="location-display">📍</span>
+    </div>
+</header>
+
+<section class="map-section">
+    <div id="map"></div>
+    <div class="layer-switcher" id="layer-switcher">
+        <button class="layer-btn active" data-layer="street">🗺️ 街道</button>
+        <button class="layer-btn" data-layer="satellite">🛰️ 卫星</button>
+    </div>
+    <div class="poi-map-toolbar" id="poi-map-toolbar">
+        <div class="poi-map-toolbar-inner">
+            <button class="poi-btn" data-type="toilet"><span class="poi-emoji">🚻</span></button>
+            <button class="poi-btn" data-type="photo"><span class="poi-emoji">📸</span></button>
+            <button class="poi-btn" data-type="rest"><span class="poi-emoji">🪑</span></button>
+            <button class="poi-btn" data-type="supply"><span class="poi-emoji">🏪</span></button>
+            <button class="poi-btn" data-type="water"><span class="poi-emoji">💧</span></button>
+            <button class="poi-btn" data-type="danger"><span class="poi-emoji">⚠️</span></button>
+        </div>
+    </div>
+    <div class="map-hint" id="map-hint">上传 GPX 文件或拖拽到页面以显示轨迹</div>
+</section>
+
+<section class="elevation-section">
+    <div class="elevation-card" id="elevation-card">
+        <div class="elevation-title">海拔剖面 (Elevation Profile)</div>
+        <canvas id="elevation-chart"></canvas>
+    </div>
+</section>
+
+<section class="stats-section">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">🚴</div>
+            <span class="stat-value" id="stat-distance">--</span>
+            <span class="stat-label">距离 (km)</span>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⛰️</div>
+            <span class="stat-value" id="stat-elevation">--</span>
+            <span class="stat-label">爬升 (m)</span>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⏱️</div>
+            <span class="stat-value" id="stat-duration">--</span>
+            <span class="stat-label">时长（25km/h）</span>
+        </div>
+    </div>
+</section>
+
+<section class="details-section">
+    <div class="detail-card">
+        <h3>📝 活动描述</h3>
+        <div class="description" contenteditable="true" id="description"></div>
+    </div>
+
+    <div class="detail-card">
+        <h3>🗺️ 路书链接</h3>
+        <div class="route-links" id="route-links">
+            <a href="#" class="route-link strava" target="_blank" id="link-strava">
+                <span class="icon">S</span> Strava
+            </a>
+            <a href="#" class="route-link igp" target="_blank" id="link-igp">
+                <span class="icon">i</span> iGPSPORT
+            </a>
+            <a href="#" class="route-link garmin" target="_blank" id="link-garmin">
+                <span class="icon">G</span> Garmin Connect
+            </a>
+        </div>
+        <div class="link-input-group" style="margin-top: 14px;">
+            <div class="link-input">
+                <label>Strava</label>
+                <input type="url" id="input-strava" placeholder="https://www.strava.com/activities/...">
+            </div>
+            <div class="link-input">
+                <label>iGPSPORT</label>
+                <input type="url" id="input-igp" placeholder="https://share.igpsport.com/...">
+            </div>
+            <div class="link-input">
+                <label>Garmin</label>
+                <input type="url" id="input-garmin" placeholder="https://connect.garmin.com/...">
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-card">
+        <h3>📂 GPX 文件</h3>
+        <div class="upload-zone" id="upload-zone">
+            <div class="upload-zone-icon">📁</div>
+            <div class="upload-zone-text">点击选择或拖拽 GPX 文件到此处</div>
+        </div>
+        <div class="gpx-actions">
+            <button class="btn btn-primary" id="upload-btn">📤 上传 GPX</button>
+            <button class="btn btn-secondary" id="download-btn" disabled>⬇️ 下载 GPX</button>
+        </div>
+        <div class="gpx-info" id="gpx-info"></div>
+        <div class="filter-controls hidden" id="filter-controls">
+            <div class="filter-row">
+                <label class="filter-toggle">
+                    <input type="checkbox" id="filter-toggle" checked>
+                    <span>隧道/桥梁过滤</span>
+                    <span class="filter-badge active" id="filter-badge">已启用</span>
+                </label>
+            </div>
+            <div class="filter-row">
+                <div class="filter-slider-group">
+                    <label>坡度阈值</label>
+                    <input type="range" id="filter-threshold" min="5" max="30" value="15" step="1">
+                    <span class="value" id="filter-value">15%</span>
+                </div>
+            </div>
+            <div class="filter-row">
+                <div class="filter-slider-group">
+                    <label>平滑窗口</label>
+                    <input type="range" id="filter-window" min="3" max="15" value="7" step="2">
+                    <span class="value" id="filter-window-value">7</span>
+                </div>
+            </div>
+            <div class="filter-hint" id="filter-hint">过滤隧道/桥梁中的GPS异常跳点，减少无效爬升。调整坡度阈值可控制过滤强度。</div>
+        </div>
+        <input type="file" id="gpx-input" accept=".gpx" hidden>
+    </div>
+
+    <div class="detail-card">
+        <h3>🚴 电子骑友</h3>
+        <div class="rider-controls">
+            <div class="speed-input">
+                <label>匀速</label>
+                <input type="number" id="rider-speed" value="25" min="5" max="60" step="1">
+                <span class="unit">km/h</span>
+            </div>
+            <div class="rider-buttons">
+                <button class="btn btn-primary" id="rider-start" disabled>▶ 出发</button>
+                <button class="btn btn-secondary" id="rider-pause" disabled>⏸ 暂停</button>
+                <button class="btn btn-secondary" id="rider-reset" disabled>↺ 重置</button>
+            </div>
+        </div>
+        <div class="rider-info" id="rider-info">
+            <div class="rider-progress"><div class="rider-progress-bar" id="rider-progress-bar"></div></div>
+            <div class="rider-stats">
+                <span id="rider-distance">0.00 / 0.00 km</span>
+                <span id="rider-time">00:00:00</span>
+            </div>
+            <div class="rider-eta" id="rider-eta">上传 GPX 后可模拟骑行</div>
+        </div>
+    </div>
+
+    <div class="detail-card">
+        <h3>🔗 分享</h3>
+        <div class="social-links">
+            <a href="#" class="social-link weibo" target="_blank" id="share-weibo">微博</a>
+            <a href="#" class="social-link wechat" target="_blank" id="share-wechat">微信</a>
+            <a href="#" class="social-link twitter" target="_blank" id="share-twitter">Twitter</a>
+            <a href="javascript:void(0)" class="social-link copy-link" id="share-copy">复制链接</a>
+        </div>
+    </div>
+
+    <div class="detail-card poi-section">
+        <h3>📍 兴趣点 (POI)</h3>
+        <div class="poi-list" id="poi-list">
+            <div class="poi-empty">选择地图上方工具栏，点击地图添加</div>
+        </div>
+        <div class="poi-actions">
+            <button class="btn btn-secondary" id="poi-export">📤 导出 JSON</button>
+            <button class="btn btn-secondary" id="poi-import-btn">📥 导入 JSON</button>
+            <input type="file" id="poi-import-input" accept=".json" hidden>
+        </div>
+    </div>
+</section>
+
+<footer class="footer">
+    <p>© 2024 shiyangyu.com · 骑行活动发布平台</p>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function() {
+    const state = {
+        map: null,
+        trackLayer: null,
+        whiteTrackLayer: null,
+        startMarker: null,
+        endMarker: null,
+        gpxData: null,
+        rawPoints: [],
+        gpxPoints: [],
+        fileName: '',
+        totalDistance: 0,
+        totalElevationGain: 0,
+        totalDuration: 0
+    };
+
+    let filterEnabled = true;
+    let gradientThreshold = 15;
+    let smoothWindow = 7;
+
+    function initMap() {
+        state.map = L.map('map', {
+            zoomControl: true,
+            scrollWheelZoom: true
+        }).setView([30, 104], 10);
+
+        state.layers = {
+            street: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+                maxZoom: 19
+            }),
+            satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '&copy; Esri, Maxar, Earthstar Geographics',
+                maxZoom: 18
+            })
+        };
+
+        state.currentLayer = 'street';
+        state.layers.street.addTo(state.map);
+
+        setTimeout(() => state.map.invalidateSize(), 100);
+    }
+
+    function initLayerSwitcher() {
+        const switcher = document.getElementById('layer-switcher');
+        document.getElementById('poi-map-toolbar').addEventListener('click', () => {});
+        switcher.addEventListener('click', e => {
+            const btn = e.target.closest('.layer-btn');
+            if (!btn) return;
+            const layer = btn.dataset.layer;
+            if (layer === state.currentLayer) return;
+
+            state.map.removeLayer(state.layers[state.currentLayer]);
+            state.layers[layer].addTo(state.map);
+            state.currentLayer = layer;
+
+            switcher.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    }
+
+    function haversine(p1, p2) {
+        const R = 6371000;
+        const toRad = d => d * Math.PI / 180;
+        const dLat = toRad(p2.lat - p1.lat);
+        const dLon = toRad(p2.lon - p1.lon);
+        const a = Math.sin(dLat/2)**2 + Math.cos(toRad(p1.lat)) * Math.cos(toRad(p2.lat)) * Math.sin(dLon/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function filterElevation(points) {
+        if (!filterEnabled || points.length < 3) {
+            return points.map(p => p.ele);
+        }
+
+        const eles = points.map(p => p.ele);
+        const filtered = [...eles];
+
+        for (let i = 1; i < points.length; i++) {
+            const dist = haversine(points[i - 1], points[i]);
+            if (dist === 0) continue;
+            const gradient = Math.abs(filtered[i] - filtered[i - 1]) / dist * 100;
+
+            if (gradient > gradientThreshold) {
+                if (i > 0 && i < points.length - 1) {
+                    filtered[i] = (filtered[i - 1] + filtered[i + 1]) / 2;
+                } else if (i > 0) {
+                    filtered[i] = filtered[i - 1];
+                }
+            }
+        }
+
+        const halfWin = Math.floor(smoothWindow / 2);
+        const smoothed = [...filtered];
+        for (let i = halfWin; i < filtered.length - halfWin; i++) {
+            const window = filtered.slice(i - halfWin, i + halfWin + 1);
+            window.sort((a, b) => a - b);
+            smoothed[i] = window[Math.floor(window.length / 2)];
+        }
+
+        return smoothed;
+    }
+
+    function calcStatsFromPoints(points) {
+        let totalDist = 0;
+        let totalEleGain = 0;
+        let prevEle = null;
+
+        for (let i = 0; i < points.length; i++) {
+            if (i > 0) {
+                totalDist += haversine(points[i - 1], points[i]);
+            }
+            if (prevEle !== null && points[i].ele > prevEle) {
+                totalEleGain += points[i].ele - prevEle;
+            }
+            prevEle = points[i].ele;
+        }
+
+        let duration = 0;
+        if (points[0].time && points[points.length - 1].time) {
+            duration = (points[points.length - 1].time - points[0].time) / 1000;
+        }
+
+        return { totalDistance: totalDist, totalElevationGain: totalEleGain, duration };
+    }
+
+    function updateWithFilter() {
+        if (state.rawPoints.length === 0) return;
+
+        const filteredEles = filterElevation(state.rawPoints);
+
+        state.gpxPoints = state.rawPoints.map((p, i) => ({
+            lat: p.lat,
+            lon: p.lon,
+            ele: filteredEles[i],
+            time: p.time
+        }));
+
+        const stats = calcStatsFromPoints(state.gpxPoints);
+        state.totalDistance = stats.totalDistance;
+        state.totalElevationGain = stats.totalElevationGain;
+        state.totalDuration = stats.duration;
+
+        renderTrack(state.gpxPoints);
+        drawElevationProfile(state.gpxPoints);
+        updateStats(stats);
+
+        const hint = document.getElementById('filter-hint');
+        if (filterEnabled) {
+            const origStats = calcStatsFromPoints(state.rawPoints);
+            const saved = Math.round(origStats.totalElevationGain - stats.totalElevationGain);
+            hint.textContent = `已过滤 ${saved}m 无效爬升（原始 ${Math.round(origStats.totalElevationGain)}m → 当前 ${Math.round(stats.totalElevationGain)}m）`;
+        } else {
+            hint.textContent = '隧道/桥梁过滤已关闭，显示原始GPS数据';
+        }
+    }
+
+    function parseGpx(gpxString) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(gpxString, 'text/xml');
+        const parseError = doc.querySelector('parsererror');
+        if (parseError) { alert('GPX 文件解析失败'); return null; }
+
+        const trkpts = doc.querySelectorAll('trkpt');
+        if (trkpts.length === 0) { alert('GPX 文件中未找到轨迹点'); return null; }
+
+        const points = [];
+        let totalEleGain = 0;
+        let prevEle = null;
+
+        trkpts.forEach(pt => {
+            const lat = parseFloat(pt.getAttribute('lat'));
+            const lon = parseFloat(pt.getAttribute('lon'));
+            const eleEl = pt.querySelector('ele');
+            const ele = eleEl ? parseFloat(eleEl.textContent) : 0;
+            const timeEl = pt.querySelector('time');
+            const time = timeEl ? new Date(timeEl.textContent) : null;
+
+            if (prevEle !== null && ele > prevEle) {
+                totalEleGain += ele - prevEle;
+            }
+            prevEle = ele;
+
+            points.push({ lat, lon, ele, time });
+        });
+
+        let totalDist = 0;
+        for (let i = 1; i < points.length; i++) {
+            totalDist += haversine(points[i-1], points[i]);
+        }
+
+        let duration = 0;
+        if (points[0].time && points[points.length-1].time) {
+            duration = (points[points.length-1].time - points[0].time) / 1000;
+        }
+
+        return {
+            points,
+            totalDistance: totalDist,
+            totalElevationGain: totalEleGain,
+            duration
+        };
+    }
+
+    function renderTrack(points) {
+        if (state.trackLayer) state.map.removeLayer(state.trackLayer);
+        if (state.whiteTrackLayer) state.map.removeLayer(state.whiteTrackLayer);
+        if (state.startMarker) state.map.removeLayer(state.startMarker);
+        if (state.endMarker) state.map.removeLayer(state.endMarker);
+
+        const latlngs = points.map(p => [p.lat, p.lon]);
+
+        state.whiteTrackLayer = L.polyline(latlngs, {
+            color: '#fff',
+            weight: 8,
+            opacity: 0.3,
+            lineJoin: 'round',
+            lineCap: 'round'
+        }).addTo(state.map);
+
+        state.trackLayer = L.polyline(latlngs, {
+            color: '#87314e',
+            weight: 5,
+            opacity: 0.85,
+            lineJoin: 'round',
+            lineCap: 'round'
+        }).addTo(state.map);
+
+        const startIcon = L.divIcon({
+            html: '<div style="background:#27ae60;width:24px;height:24px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;">S</div>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+            className: ''
+        });
+        const endIcon = L.divIcon({
+            html: '<div style="background:#e74c3c;width:24px;height:24px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;">E</div>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+            className: ''
+        });
+
+        state.startMarker = L.marker(latlngs[0], { icon: startIcon }).addTo(state.map)
+            .bindPopup('<b>起点</b>');
+        state.endMarker = L.marker(latlngs[latlngs.length-1], { icon: endIcon }).addTo(state.map)
+            .bindPopup('<b>终点</b>');
+
+        state.map.fitBounds(state.trackLayer.getBounds(), { padding: [40, 40] });
+    }
+
+    function drawElevationProfile(points) {
+        const card = document.getElementById('elevation-card');
+        card.classList.add('show');
+
+        const canvas = document.getElementById('elevation-chart');
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const width = rect.width - 40;
+        const height = 140;
+
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        ctx.scale(dpr, dpr);
+
+        const pad = { top: 10, right: 15, bottom: 24, left: 50 };
+        const cw = width - pad.left - pad.right;
+        const ch = height - pad.top - pad.bottom;
+
+        let cumulativeDist = [0];
+        for (let i = 1; i < points.length; i++) {
+            cumulativeDist.push(cumulativeDist[i-1] + haversine(points[i-1], points[i]));
+        }
+        const totalDist = cumulativeDist[cumulativeDist.length - 1];
+
+        const eles = points.map(p => p.ele);
+        const minEle = Math.min(...eles);
+        const maxEle = Math.max(...eles);
+        const eleRange = maxEle - minEle || 1;
+        const elePadding = eleRange * 0.1;
+
+        ctx.clearRect(0, 0, width, height);
+
+        ctx.strokeStyle = '#e8e8e8';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 4; i++) {
+            const y = pad.top + (ch / 4) * i;
+            ctx.beginPath();
+            ctx.moveTo(pad.left, y);
+            ctx.lineTo(pad.left + cw, y);
+            ctx.stroke();
+
+            const eleVal = maxEle + elePadding - ((eleRange + elePadding * 2) / 4) * i;
+            ctx.fillStyle = '#95a5a6';
+            ctx.font = '10px -apple-system, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(Math.round(eleVal) + 'm', pad.left - 6, y + 4);
+        }
+
+        for (let i = 0; i <= 4; i++) {
+            const x = pad.left + (cw / 4) * i;
+            const distVal = (totalDist / 1000 / 4) * i;
+            ctx.fillStyle = '#95a5a6';
+            ctx.font = '10px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(distVal.toFixed(1) + 'km', x, height - 4);
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(pad.left, pad.top + ch);
+        for (let i = 0; i < points.length; i++) {
+            const x = pad.left + (cumulativeDist[i] / totalDist) * cw;
+            const y = pad.top + ch - ((eles[i] - minEle + elePadding) / (eleRange + elePadding * 2)) * ch;
+            ctx.lineTo(x, y);
+        }
+        ctx.lineTo(pad.left + cw, pad.top + ch);
+        ctx.closePath();
+
+        const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
+        grad.addColorStop(0, 'rgba(135, 49, 78, 0.35)');
+        grad.addColorStop(1, 'rgba(135, 49, 78, 0.02)');
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.beginPath();
+        for (let i = 0; i < points.length; i++) {
+            const x = pad.left + (cumulativeDist[i] / totalDist) * cw;
+            const y = pad.top + ch - ((eles[i] - minEle + elePadding) / (eleRange + elePadding * 2)) * ch;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#87314e';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    function updateStats(gpxResult) {
+        const distKm = (gpxResult.totalDistance / 1000).toFixed(2);
+        const eleGain = Math.round(gpxResult.totalElevationGain);
+        const defaultSpeed = 25;
+        const durationSec = gpxResult.totalDistance / (defaultSpeed * 1000 / 3600);
+
+        const h = Math.floor(durationSec / 3600);
+        const m = Math.floor((durationSec % 3600) / 60);
+        const s = Math.floor(durationSec % 60);
+        const durationStr = h > 0 ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${m}:${String(s).padStart(2,'0')}`;
+
+        document.getElementById('stat-distance').textContent = distKm;
+        document.getElementById('stat-elevation').textContent = eleGain;
+        document.getElementById('stat-duration').textContent = durationStr;
+
+        const info = document.getElementById('gpx-info');
+        const fileName = state.fileName || 'route.gpx';
+        info.innerHTML = `<strong>${fileName}</strong> · ${state.gpxPoints.length} 个轨迹点 · ${distKm} km`;
+        info.classList.add('show');
+    }
+
+    function loadGpxString(gpxString, fileName) {
+        const result = parseGpx(gpxString);
+        if (!result) return;
+
+        state.gpxData = gpxString;
+        state.rawPoints = result.points;
+        state.fileName = fileName || 'route.gpx';
+
+        const titleText = fileName ? fileName.replace(/\.gpx$/i, '') : '';
+        document.getElementById('title').textContent = titleText;
+
+        document.getElementById('filter-controls').classList.remove('hidden');
+        document.getElementById('poi-map-toolbar').classList.add('show');
+        document.getElementById('layer-switcher').classList.add('show');
+        updateWithFilter();
+        enableRider();
+
+        document.getElementById('download-btn').disabled = false;
+        document.getElementById('map-hint').style.display = 'none';
+    }
+
+    function handleFile(file) {
+        if (!file || !file.name.endsWith('.gpx')) {
+            alert('请选择 .gpx 格式的文件');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = e => loadGpxString(e.target.result, file.name);
+        reader.readAsText(file);
+    }
+
+    function initUpload() {
+        const input = document.getElementById('gpx-input');
+        const zone = document.getElementById('upload-zone');
+        const btn = document.getElementById('upload-btn');
+        const downloadBtn = document.getElementById('download-btn');
+
+        btn.addEventListener('click', () => input.click());
+        zone.addEventListener('click', () => input.click());
+
+        input.addEventListener('change', e => {
+            if (e.target.files[0]) handleFile(e.target.files[0]);
+        });
+
+        zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+        zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+        zone.addEventListener('drop', e => {
+            e.preventDefault();
+            zone.classList.remove('dragover');
+            if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+        });
+
+        document.addEventListener('dragover', e => e.preventDefault());
+        document.addEventListener('drop', e => {
+            e.preventDefault();
+            if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (!state.gpxData) return;
+            const blob = new Blob([state.gpxData], { type: 'application/gpx+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = state.fileName || 'route.gpx';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    }
+
+    function initRouteLinks() {
+        const inputs = { strava: document.getElementById('input-strava'), igp: document.getElementById('input-igp'), garmin: document.getElementById('input-garmin') };
+        const links = { strava: document.getElementById('link-strava'), igp: document.getElementById('link-igp'), garmin: document.getElementById('link-garmin') };
+
+        Object.keys(inputs).forEach(key => {
+            inputs[key].addEventListener('input', () => {
+                const url = inputs[key].value.trim();
+                if (url) links[key].href = url;
+            });
+        });
+    }
+
+    function initShare() {
+        document.getElementById('share-weibo').addEventListener('click', e => {
+            e.preventDefault();
+            const url = encodeURIComponent(location.href);
+            const title = encodeURIComponent(document.getElementById('title').textContent);
+            window.open(`https://service.weibo.com/share/share.php?url=${url}&title=${title}`, '_blank', 'width=600,height=400');
+        });
+
+        document.getElementById('share-wechat').addEventListener('click', e => {
+            e.preventDefault();
+            alert('请截图或复制链接分享到微信');
+        });
+
+        document.getElementById('share-twitter').addEventListener('click', e => {
+            e.preventDefault();
+            const url = encodeURIComponent(location.href);
+            const text = encodeURIComponent(document.getElementById('title').textContent);
+            window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank', 'width=600,height=400');
+        });
+
+        document.getElementById('share-copy').addEventListener('click', () => {
+            navigator.clipboard.writeText(location.href).then(() => {
+                const el = document.getElementById('share-copy');
+                el.textContent = '已复制';
+                setTimeout(() => el.textContent = '复制链接', 1500);
+            });
+        });
+    }
+
+    function initFilterControls() {
+        const toggle = document.getElementById('filter-toggle');
+        const badge = document.getElementById('filter-badge');
+        const thresholdSlider = document.getElementById('filter-threshold');
+        const thresholdValue = document.getElementById('filter-value');
+        const windowSlider = document.getElementById('filter-window');
+        const windowValue = document.getElementById('filter-window-value');
+
+        toggle.addEventListener('change', () => {
+            filterEnabled = toggle.checked;
+            badge.textContent = filterEnabled ? '已启用' : '已关闭';
+            badge.className = 'filter-badge ' + (filterEnabled ? 'active' : 'inactive');
+            if (state.rawPoints.length > 0) updateWithFilter();
+        });
+
+        thresholdSlider.addEventListener('input', () => {
+            gradientThreshold = parseInt(thresholdSlider.value);
+            thresholdValue.textContent = gradientThreshold + '%';
+            if (state.rawPoints.length > 0) updateWithFilter();
+        });
+
+        windowSlider.addEventListener('input', () => {
+            smoothWindow = parseInt(windowSlider.value);
+            windowValue.textContent = smoothWindow;
+            if (state.rawPoints.length > 0) updateWithFilter();
+        });
+    }
+
+    const rider = {
+        marker: null,
+        isRunning: false,
+        startTime: null,
+        elapsed: 0,
+        speed: 25,
+        animId: null,
+        cumulativeDists: [],
+        totalDist: 0
+    };
+
+    function precomputeDists() {
+        rider.cumulativeDists = [0];
+        let total = 0;
+        for (let i = 1; i < state.gpxPoints.length; i++) {
+            total += haversine(state.gpxPoints[i - 1], state.gpxPoints[i]);
+            rider.cumulativeDists.push(total);
+        }
+        rider.totalDist = total;
+    }
+
+    function getPositionOnTrack(targetDist) {
+        const pts = state.gpxPoints;
+        const cd = rider.cumulativeDists;
+        for (let i = 1; i < pts.length; i++) {
+            if (cd[i] >= targetDist) {
+                const segDist = cd[i] - cd[i - 1];
+                const ratio = segDist === 0 ? 0 : (targetDist - cd[i - 1]) / segDist;
+                return {
+                    lat: pts[i - 1].lat + (pts[i].lat - pts[i - 1].lat) * ratio,
+                    lon: pts[i - 1].lon + (pts[i].lon - pts[i - 1].lon) * ratio
+                };
+            }
+        }
+        return { lat: pts[pts.length - 1].lat, lon: pts[pts.length - 1].lon };
+    }
+
+    function formatTime(sec) {
+        const h = Math.floor(sec / 3600);
+        const m = Math.floor((sec % 3600) / 60);
+        const s = Math.floor(sec % 60);
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function updateRiderUI(distMeters, elapsedSec) {
+        const distKm = distMeters / 1000;
+        const totalKm = rider.totalDist / 1000;
+        const progress = Math.min(distMeters / rider.totalDist * 100, 100);
+
+        document.getElementById('rider-progress-bar').style.width = progress + '%';
+        document.getElementById('rider-distance').textContent = `${distKm.toFixed(2)} / ${totalKm.toFixed(2)} km`;
+        document.getElementById('rider-time').textContent = formatTime(elapsedSec);
+
+        if (distMeters < rider.totalDist && rider.speed > 0) {
+            const remaining = (rider.totalDist - distMeters) / (rider.speed * 1000 / 3600);
+            document.getElementById('rider-eta').innerHTML = `预计还需 <strong>${formatTime(remaining)}</strong> 到达终点`;
+        }
+    }
+
+    function animateRider() {
+        if (!rider.isRunning) return;
+        rider.elapsed = performance.now() - rider.startTime;
+        const elapsedSec = rider.elapsed / 1000;
+        const distMeters = rider.speed * 1000 / 3600 * elapsedSec;
+
+        if (distMeters >= rider.totalDist) {
+            const pos = getPositionOnTrack(rider.totalDist);
+            rider.marker.setLatLng([pos.lat, pos.lon]);
+            updateRiderUI(rider.totalDist, elapsedSec);
+            rider.isRunning = false;
+            document.getElementById('rider-start').disabled = true;
+            document.getElementById('rider-pause').disabled = true;
+            document.getElementById('rider-eta').innerHTML = '<strong>已到达终点！</strong>';
+            rider.marker.setPopupContent('🚴 电子骑友<br>已到达终点!').openPopup();
+            return;
+        }
+
+        const pos = getPositionOnTrack(distMeters);
+        rider.marker.setLatLng([pos.lat, pos.lon]);
+        rider.marker.setPopupContent(`🚴 电子骑友<br>${(distMeters / 1000).toFixed(2)} km`);
+        updateRiderUI(distMeters, elapsedSec);
+        rider.animId = requestAnimationFrame(animateRider);
+    }
+
+    function startRider() {
+        if (!state.gpxPoints.length) return;
+        if (!rider.marker) {
+            const icon = L.divIcon({
+                html: '<div style="font-size:28px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🚴</div>',
+                iconSize: [32, 32], iconAnchor: [16, 16], className: ''
+            });
+            rider.marker = L.marker(state.gpxPoints[0], { icon }).addTo(state.map).bindPopup('🚴 电子骑友');
+        }
+        rider.speed = parseInt(document.getElementById('rider-speed').value) || 25;
+        rider.isRunning = true;
+        rider.startTime = performance.now() - rider.elapsed;
+        document.getElementById('rider-start').disabled = true;
+        document.getElementById('rider-pause').disabled = false;
+        document.getElementById('rider-reset').disabled = false;
+        animateRider();
+    }
+
+    function pauseRider() {
+        rider.isRunning = false;
+        rider.elapsed = performance.now() - rider.startTime;
+        if (rider.animId) cancelAnimationFrame(rider.animId);
+        document.getElementById('rider-start').disabled = false;
+        document.getElementById('rider-pause').disabled = true;
+    }
+
+    function resetRider() {
+        rider.isRunning = false;
+        rider.elapsed = 0;
+        if (rider.animId) cancelAnimationFrame(rider.animId);
+        if (rider.marker) rider.marker.setLatLng(state.gpxPoints[0]);
+        document.getElementById('rider-start').disabled = false;
+        document.getElementById('rider-pause').disabled = true;
+        document.getElementById('rider-reset').disabled = true;
+        document.getElementById('rider-progress-bar').style.width = '0%';
+        const totalKm = rider.totalDist / 1000;
+        document.getElementById('rider-distance').textContent = `0.00 / ${totalKm.toFixed(2)} km`;
+        document.getElementById('rider-time').textContent = '00:00:00';
+        const etaMin = (rider.totalDist / (rider.speed * 1000 / 3600)) / 60;
+        document.getElementById('rider-eta').innerHTML = `全程约 <strong>${etaMin.toFixed(0)}</strong> 分钟（匀速 ${rider.speed} km/h）`;
+    }
+
+    function initVirtualRider() {
+        document.getElementById('rider-start').addEventListener('click', startRider);
+        document.getElementById('rider-pause').addEventListener('click', pauseRider);
+        document.getElementById('rider-reset').addEventListener('click', resetRider);
+        document.getElementById('rider-speed').addEventListener('change', function () {
+            rider.speed = parseInt(this.value) || 25;
+        });
+    }
+
+    function enableRider() {
+        precomputeDists();
+        document.getElementById('rider-start').disabled = false;
+        document.getElementById('rider-reset').disabled = false;
+        const etaMin = (rider.totalDist / (rider.speed * 1000 / 3600)) / 60;
+        document.getElementById('rider-eta').innerHTML = `全程约 <strong>${etaMin.toFixed(0)}</strong> 分钟（匀速 ${rider.speed} km/h）`;
+    }
+
+    const POI_TYPES = {
+        toilet: { emoji: '🚻', label: '厕所' },
+        photo:  { emoji: '📸', label: '拍照点' },
+        rest:   { emoji: '🪑', label: '休息' },
+        supply: { emoji: '🏪', label: '补给点' },
+        water:  { emoji: '💧', label: '饮水' },
+        danger: { emoji: '⚠️', label: '注意' }
+    };
+
+    const pois = [];
+    let activePoiType = null;
+    let poiClickHandler = null;
+
+    function createPoiIcon(type) {
+        const info = POI_TYPES[type];
+        return L.divIcon({
+            html: `<div style="font-size:24px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3));cursor:pointer;">${info.emoji}</div>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+            className: ''
+        });
+    }
+
+    function addPoi(lat, lng, type, name) {
+        const info = POI_TYPES[type];
+        const marker = L.marker([lat, lng], { icon: createPoiIcon(type) }).addTo(state.map);
+        const poiName = name || info.label;
+        marker.bindPopup(`<b>${info.emoji} ${poiName}</b>`);
+        const poi = { lat, lng, type, name: poiName, marker };
+        pois.push(poi);
+        renderPoiList();
+    }
+
+    function removePoi(idx) {
+        if (pois[idx]) {
+            state.map.removeLayer(pois[idx].marker);
+            pois.splice(idx, 1);
+            renderPoiList();
+        }
+    }
+
+    function renderPoiList() {
+        const list = document.getElementById('poi-list');
+        if (pois.length === 0) {
+            list.innerHTML = '<div class="poi-empty">选择地图上方工具栏，点击地图添加</div>';
+            return;
+        }
+        list.innerHTML = pois.map((p, i) => {
+            const info = POI_TYPES[p.type];
+            return `<div class="poi-item">
+                <span class="poi-type">${info.emoji}</span>
+                <span class="poi-name">${p.name}</span>
+                <button class="poi-del" data-idx="${i}">✕</button>
+            </div>`;
+        }).join('');
+
+        list.querySelectorAll('.poi-del').forEach(btn => {
+            btn.addEventListener('click', () => removePoi(parseInt(btn.dataset.idx)));
+        });
+    }
+
+    function exportPois() {
+        const data = pois.map(p => ({ lat: p.lat, lng: p.lng, type: p.type, name: p.name }));
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'pois.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function importPois(jsonString) {
+        try {
+            const data = JSON.parse(jsonString);
+            if (!Array.isArray(data)) return;
+            data.forEach(p => {
+                if (p.lat && p.lng && p.type && POI_TYPES[p.type]) {
+                    addPoi(p.lat, p.lng, p.type, p.name);
+                }
+            });
+        } catch (e) {
+            alert('JSON 解析失败');
+        }
+    }
+
+    function initPoi() {
+        const toolbar = document.getElementById('poi-map-toolbar');
+
+        state.map.on('click', function(e) {
+            if (!activePoiType) return;
+            const name = prompt(`为这个${POI_TYPES[activePoiType].label}取个名字（可留空）：`, POI_TYPES[activePoiType].label);
+            if (name === null) return;
+            addPoi(e.latlng.lat, e.latlng.lng, activePoiType, name || POI_TYPES[activePoiType].label);
+        });
+
+        toolbar.addEventListener('click', e => {
+            const btn = e.target.closest('.poi-btn');
+            if (!btn) return;
+            const type = btn.dataset.type;
+
+            toolbar.querySelectorAll('.poi-btn').forEach(b => b.classList.remove('active'));
+
+            if (activePoiType === type) {
+                activePoiType = null;
+                document.getElementById('map').style.cursor = '';
+                return;
+            }
+
+            activePoiType = type;
+            btn.classList.add('active');
+            document.getElementById('map').style.cursor = 'crosshair';
+        });
+
+        document.getElementById('poi-export').addEventListener('click', exportPois);
+        document.getElementById('poi-import-btn').addEventListener('click', () => {
+            document.getElementById('poi-import-input').click();
+        });
+        document.getElementById('poi-import-input').addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => importPois(ev.target.result);
+            reader.readAsText(file);
+        });
+    }
+
+    function init() {
+        initMap();
+        initLayerSwitcher();
+        initUpload();
+        initRouteLinks();
+        initShare();
+        initFilterControls();
+        initVirtualRider();
+        initPoi();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>
+</body>
+</html>
