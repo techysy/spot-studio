@@ -2,7 +2,7 @@
 
 > 🎯 骑行 & 徒步活动发布平台 — GPX 轨迹渲染 + 机位踩点 📷
 
-[![GitHub Pages](https://img.shields.io/badge/GitHub-Pages-blue)](https://techysy.github.io/spot-studio)
+[![GitHub Pages](https://img.shields.io/badge/GitHub-Pages-blue)](https://shiyangyu.com/spot-studio)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ---
