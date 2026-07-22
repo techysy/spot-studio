@@ -7,7 +7,7 @@
     <meta property="og:title" content="骑行活动发布">
     <meta property="og:description" content="骑行活动详情与GPX轨迹">
     <meta property="og:type" content="website">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="leaflet.css" />
     <style>
         :root {
             --primary: #311e3e;
@@ -439,6 +439,119 @@
         .layer-btn.active { background: var(--accent); color: #fff; font-weight: 600; }
         .layer-btn:hover:not(.active) { background: #f0f0f0; }
 
+        .color-mode-bar {
+            position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+            z-index: 1000; display: none;
+        }
+        .color-mode-bar.show { display: block; }
+        .color-mode-bar-inner {
+            display: flex; gap: 4px; padding: 6px 10px;
+            background: rgba(255,255,255,0.95); border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15); backdrop-filter: blur(8px);
+            align-items: center;
+        }
+        .color-mode-label { font-size: 0.78em; color: var(--text-secondary); margin-right: 4px; white-space: nowrap; }
+        .color-mode-btn {
+            padding: 4px 10px; border-radius: 6px; border: 1.5px solid var(--border);
+            background: var(--card); cursor: pointer; font-size: 0.76em;
+            color: var(--text-secondary); transition: all 0.2s; white-space: nowrap;
+        }
+        .color-mode-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .color-mode-btn.active { border-color: var(--accent); background: var(--accent); color: #fff; font-weight: 600; }
+
+        .color-legend {
+            position: absolute; bottom: 52px; right: 12px; z-index: 1000;
+            background: rgba(255,255,255,0.95); border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12); padding: 10px 12px;
+            display: none; min-width: 140px;
+        }
+        .color-legend.show { display: block; }
+        .color-legend-title { font-size: 0.75em; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600; }
+        .color-legend-bar {
+            height: 12px; border-radius: 3px; margin-bottom: 4px;
+            background: linear-gradient(to right, hsl(240,80%,50%), hsl(180,80%,50%), hsl(120,80%,50%), hsl(60,80%,50%), hsl(0,80%,50%));
+        }
+        .color-legend-labels { display: flex; justify-content: space-between; font-size: 0.7em; color: var(--text-muted); }
+
+        .distance-markers { display: none; }
+
+        .measure-result {
+            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            z-index: 1001; background: rgba(0,0,0,0.8); color: #fff;
+            padding: 8px 16px; border-radius: 8px; font-size: 0.85em;
+            display: none; pointer-events: none; white-space: nowrap;
+        }
+        .measure-result.show { display: block; }
+
+        .context-menu {
+            position: absolute; z-index: 2000;
+            background: var(--card); border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.18); padding: 6px 0;
+            min-width: 160px; display: none;
+        }
+        .context-menu.show { display: block; }
+        .context-menu-item {
+            padding: 8px 16px; font-size: 0.82em; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            transition: background 0.15s;
+        }
+        .context-menu-item:hover { background: var(--bg); }
+        .context-menu-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+        .track-list {
+            display: flex; flex-direction: column; gap: 6px; margin-top: 10px;
+        }
+        .track-item {
+            display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+            background: var(--bg); border-radius: 8px; font-size: 0.82em;
+        }
+        .track-color-dot {
+            width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+            border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .track-item-name { flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .track-item-toggle {
+            width: 22px; height: 22px; border-radius: 50%; border: none;
+            background: #e0e0e0; cursor: pointer; font-size: 0.7em;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .track-item-toggle.visible { background: #27ae60; color: #fff; }
+        .track-item-del {
+            width: 22px; height: 22px; border-radius: 50%; border: none;
+            background: #fee; color: #c0392b; cursor: pointer; font-size: 0.7em;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0.5; transition: opacity 0.2s;
+        }
+        .track-item-del:hover { opacity: 1; }
+
+        .editor-toolbar {
+            position: absolute; top: 12px; left: 12px; z-index: 1000;
+            display: none;
+        }
+        .editor-toolbar.show { display: block; }
+        .editor-toolbar-inner {
+            display: flex; gap: 4px; padding: 6px 10px;
+            background: rgba(255,255,255,0.95); border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15); backdrop-filter: blur(8px);
+        }
+        .editor-tool-btn {
+            padding: 6px 10px; border-radius: 6px; border: 1.5px solid var(--border);
+            background: var(--card); cursor: pointer; font-size: 0.82em;
+            color: var(--text-secondary); transition: all 0.2s;
+        }
+        .editor-tool-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .editor-tool-btn.active { border-color: var(--accent); background: var(--accent); color: #fff; }
+        .editor-tool-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .coords-display {
+            position: absolute; bottom: 12px; left: 12px; z-index: 1000;
+            background: rgba(0,0,0,0.7); color: #fff;
+            padding: 4px 10px; border-radius: 6px; font-size: 0.72em;
+            font-family: 'SF Mono', 'Menlo', monospace; display: none;
+        }
+        .coords-display.show { display: block; }
+
         @media (max-width: 768px) {
             .hero { padding: 36px 16px 32px; }
             .hero-title { font-size: 1.6em; }
@@ -474,6 +587,41 @@
             <button class="poi-btn" data-type="water"><span class="poi-emoji">💧</span></button>
             <button class="poi-btn" data-type="danger"><span class="poi-emoji">⚠️</span></button>
         </div>
+    </div>
+    <div class="color-mode-bar" id="color-mode-bar">
+        <div class="color-mode-bar-inner">
+            <span class="color-mode-label">着色：</span>
+            <button class="color-mode-btn active" data-mode="none">无</button>
+            <button class="color-mode-btn" data-mode="elevation">海拔</button>
+            <button class="color-mode-btn" data-mode="slope">坡度</button>
+            <button class="color-mode-btn" data-mode="speed">速度</button>
+        </div>
+    </div>
+    <div class="color-legend" id="color-legend">
+        <div class="color-legend-title" id="color-legend-title">海拔</div>
+        <div class="color-legend-bar" id="color-legend-bar"></div>
+        <div class="color-legend-labels">
+            <span id="color-legend-min">0m</span>
+            <span id="color-legend-max">1000m</span>
+        </div>
+    </div>
+    <div class="editor-toolbar" id="editor-toolbar">
+        <div class="editor-toolbar-inner">
+            <button class="editor-tool-btn" id="tool-undo" title="撤销">↩</button>
+            <button class="editor-tool-btn" id="tool-redo" title="重做">↪</button>
+            <button class="editor-tool-btn" id="tool-measure" title="测距">📏</button>
+            <button class="editor-tool-btn" id="tool-addpoint" title="添加节点">➕</button>
+            <button class="editor-tool-btn" id="tool-deletepoint" title="删除节点">🗑️</button>
+        </div>
+    </div>
+    <div class="measure-result" id="measure-result"></div>
+    <div class="coords-display" id="coords-display">0.000000, 0.000000</div>
+    <div class="context-menu" id="context-menu">
+        <div class="context-menu-item" data-action="mark">📍 放置标记</div>
+        <div class="context-menu-item" data-action="measure-here">📏 从这里测距</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="copy-coords">📋 复制坐标</div>
+        <div class="context-menu-item" data-action="center-map">🎯 居中地图</div>
     </div>
     <div class="map-hint" id="map-hint">上传 GPX 文件或拖拽到页面以显示轨迹</div>
 </section>
@@ -629,7 +777,7 @@
     <p>© 2024 shiyangyu.com · 骑行活动发布平台</p>
 </footer>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="leaflet.js"></script>
 <script>
 (function() {
     const state = {
@@ -644,7 +792,22 @@
         fileName: '',
         totalDistance: 0,
         totalElevationGain: 0,
-        totalDuration: 0
+        totalDuration: 0,
+        colorMode: 'none',
+        coloredSegments: null,
+        distanceMarkers: [],
+        tracks: [],
+        activeTrackIndex: 0,
+        measureMode: false,
+        measurePoints: [],
+        measureLine: null,
+        measureMarkers: [],
+        contextMarker: null,
+        undoStack: [],
+        redoStack: [],
+        addPointMode: false,
+        deletePointMode: false,
+        editHandleMarkers: []
     };
 
     let filterEnabled = true;
@@ -655,7 +818,7 @@
         state.map = L.map('map', {
             zoomControl: true,
             scrollWheelZoom: true
-        }).setView([30, 104], 10);
+        }).setView([30.5728, 104.0668], 12);
 
         state.layers = {
             street: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -734,6 +897,179 @@
         return smoothed;
     }
 
+    function hslToHex(h, s, l) {
+        s /= 100; l /= 100;
+        const a = s * Math.min(l, 1 - l);
+        const f = n => { const k = (n + h / 30) % 12; const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1); return Math.round(255 * color).toString(16).padStart(2, '0'); };
+        return `#${f(0)}${f(8)}${f(4)}`;
+    }
+
+    function getColorGradient(value, min, max) {
+        if (max === min) return hslToHex(120, 70, 50);
+        const ratio = Math.max(0, Math.min(1, (value - min) / (max - min)));
+        const h = (1 - ratio) * 240;
+        return hslToHex(h, 80, 50);
+    }
+
+    function getSlopeColor(grade) {
+        const clamped = Math.max(-15, Math.min(15, grade));
+        const ratio = (clamped + 15) / 30;
+        const h = (1 - ratio) * 240;
+        return hslToHex(h, 80, 50);
+    }
+
+    function renderColoredTrack(points, colorMode) {
+        if (state.coloredSegments) {
+            state.coloredSegments.forEach(seg => state.map.removeLayer(seg));
+            state.coloredSegments = null;
+        }
+
+        if (colorMode === 'none') {
+            renderTrack(points);
+            return;
+        }
+
+        if (state.trackLayer) state.map.removeLayer(state.trackLayer);
+        if (state.whiteTrackLayer) state.map.removeLayer(state.whiteTrackLayer);
+        if (state.startMarker) state.map.removeLayer(state.startMarker);
+        if (state.endMarker) state.map.removeLayer(state.endMarker);
+        removeDistanceMarkers();
+        removeEditHandles();
+
+        const segments = [];
+        let values = [];
+
+        if (colorMode === 'elevation') {
+            values = points.map(p => p.ele);
+        } else if (colorMode === 'slope') {
+            values = [];
+            for (let i = 0; i < points.length; i++) {
+                if (i === 0) { values.push(0); continue; }
+                const dist = haversine(points[i-1], points[i]);
+                const grade = dist > 0 ? ((points[i].ele - points[i-1].ele) / dist) * 100 : 0;
+                values.push(grade);
+            }
+        } else if (colorMode === 'speed') {
+            values = [];
+            for (let i = 0; i < points.length; i++) {
+                if (i === 0) { values.push(0); continue; }
+                const dist = haversine(points[i-1], points[i]);
+                let speed = 0;
+                if (points[i].time && points[i-1].time && dist > 0) {
+                    const dt = (points[i].time - points[i-1].time) / 1000;
+                    if (dt > 0) speed = (dist / dt) * 3.6;
+                }
+                values.push(speed);
+            }
+        }
+
+        const minVal = Math.min(...values);
+        const maxVal = Math.max(...values);
+
+        for (let i = 0; i < points.length - 1; i++) {
+            const val = (values[i] + values[i + 1]) / 2;
+            const color = colorMode === 'slope' ? getSlopeColor(val) : getColorGradient(val, minVal, maxVal);
+
+            const whiteSeg = L.polyline([[points[i].lat, points[i].lon], [points[i+1].lat, points[i+1].lon]], {
+                color: '#fff', weight: 8, opacity: 0.3, lineJoin: 'round', lineCap: 'round'
+            }).addTo(state.map);
+
+            const seg = L.polyline([[points[i].lat, points[i].lon], [points[i+1].lat, points[i+1].lon]], {
+                color: color, weight: 5, opacity: 0.85, lineJoin: 'round', lineCap: 'round'
+            }).addTo(state.map);
+
+            segments.push(whiteSeg, seg);
+        }
+
+        state.coloredSegments = segments;
+
+        const startIcon = L.divIcon({
+            html: '<div style="background:#27ae60;width:24px;height:24px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;">S</div>',
+            iconSize: [24, 24], iconAnchor: [12, 12], className: ''
+        });
+        const endIcon = L.divIcon({
+            html: '<div style="background:#e74c3c;width:24px;height:24px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;">E</div>',
+            iconSize: [24, 24], iconAnchor: [12, 12], className: ''
+        });
+
+        state.startMarker = L.marker([points[0].lat, points[0].lon], { icon: startIcon }).addTo(state.map).bindPopup('<b>起点</b>');
+        state.endMarker = L.marker([points[points.length-1].lat, points[points.length-1].lon], { icon: endIcon }).addTo(state.map).bindPopup('<b>终点</b>');
+
+        const allLatLngs = points.map(p => [p.lat, p.lon]);
+        const bounds = L.latLngBounds(allLatLngs);
+        state.map.fitBounds(bounds, { padding: [40, 40] });
+
+        updateColorLegend(colorMode, minVal, maxVal);
+        if (colorMode === 'slope') updateSlopeLegend();
+
+        if (document.getElementById('distance-markers-toggle') && document.getElementById('distance-markers-toggle').checked) {
+            addDistanceMarkers();
+        }
+    }
+
+    function updateColorLegend(mode, minVal, maxVal) {
+        const legend = document.getElementById('color-legend');
+        const title = document.getElementById('color-legend-title');
+        const bar = document.getElementById('color-legend-bar');
+        const minLabel = document.getElementById('color-legend-min');
+        const maxLabel = document.getElementById('color-legend-max');
+
+        if (mode === 'none') { legend.classList.remove('show'); return; }
+        legend.classList.add('show');
+
+        if (mode === 'elevation') {
+            title.textContent = '海拔';
+            minLabel.textContent = Math.round(minVal) + 'm';
+            maxLabel.textContent = Math.round(maxVal) + 'm';
+            bar.style.background = 'linear-gradient(to right, hsl(240,80%,50%), hsl(180,80%,50%), hsl(120,80%,50%), hsl(60,80%,50%), hsl(0,80%,50%))';
+        } else if (mode === 'slope') {
+            title.textContent = '坡度';
+            minLabel.textContent = '-15%';
+            maxLabel.textContent = '+15%';
+            bar.style.background = 'linear-gradient(to right, hsl(240,80%,50%), hsl(180,80%,50%), hsl(120,80%,50%), hsl(60,80%,50%), hsl(0,80%,50%))';
+        } else if (mode === 'speed') {
+            title.textContent = '速度';
+            minLabel.textContent = Math.round(minVal) + 'km/h';
+            maxLabel.textContent = Math.round(maxVal) + 'km/h';
+            bar.style.background = 'linear-gradient(to right, hsl(240,80%,50%), hsl(180,80%,50%), hsl(120,80%,50%), hsl(60,80%,50%), hsl(0,80%,50%))';
+        }
+    }
+
+    function updateSlopeLegend() {
+        const minLabel = document.getElementById('color-legend-min');
+        const maxLabel = document.getElementById('color-legend-max');
+        minLabel.textContent = '-15% 下坡';
+        maxLabel.textContent = '+15% 上坡';
+    }
+
+    function addDistanceMarkers() {
+        removeDistanceMarkers();
+        if (!state.gpxPoints.length) return;
+
+        let cumDist = 0;
+        let nextMarker = 1;
+        const interval = cumDist > 50 ? 10 : (cumDist > 20 ? 5 : 2);
+
+        for (let i = 1; i < state.gpxPoints.length; i++) {
+            cumDist += haversine(state.gpxPoints[i-1], state.gpxPoints[i]);
+            if (cumDist >= nextMarker * 1000) {
+                const icon = L.divIcon({
+                    html: `<div style="background:var(--accent);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,0.3);">${nextMarker}</div>`,
+                    iconSize: [22, 22], iconAnchor: [11, 11], className: ''
+                });
+                const marker = L.marker([state.gpxPoints[i].lat, state.gpxPoints[i].lon], { icon })
+                    .addTo(state.map).bindPopup(`${nextMarker} km`);
+                state.distanceMarkers.push(marker);
+                nextMarker++;
+            }
+        }
+    }
+
+    function removeDistanceMarkers() {
+        state.distanceMarkers.forEach(m => state.map.removeLayer(m));
+        state.distanceMarkers = [];
+    }
+
     function calcStatsFromPoints(points) {
         let totalDist = 0;
         let totalEleGain = 0;
@@ -774,7 +1110,11 @@
         state.totalElevationGain = stats.totalElevationGain;
         state.totalDuration = stats.duration;
 
-        renderTrack(state.gpxPoints);
+        if (state.colorMode !== 'none') {
+            renderColoredTrack(state.gpxPoints, state.colorMode);
+        } else {
+            renderTrack(state.gpxPoints);
+        }
         drawElevationProfile(state.gpxPoints);
         updateStats(stats);
 
@@ -785,6 +1125,10 @@
             hint.textContent = `已过滤 ${saved}m 无效爬升（原始 ${Math.round(origStats.totalElevationGain)}m → 当前 ${Math.round(stats.totalElevationGain)}m）`;
         } else {
             hint.textContent = '隧道/桥梁过滤已关闭，显示原始GPS数据';
+        }
+
+        if (document.getElementById('distance-markers-toggle') && document.getElementById('distance-markers-toggle').checked) {
+            addDistanceMarkers();
         }
     }
 
@@ -996,6 +1340,8 @@
         state.gpxData = gpxString;
         state.rawPoints = result.points;
         state.fileName = fileName || 'route.gpx';
+        state.undoStack = [];
+        state.redoStack = [];
 
         const titleText = fileName ? fileName.replace(/\.gpx$/i, '') : '';
         document.getElementById('title').textContent = titleText;
@@ -1003,8 +1349,12 @@
         document.getElementById('filter-controls').classList.remove('hidden');
         document.getElementById('poi-map-toolbar').classList.add('show');
         document.getElementById('layer-switcher').classList.add('show');
+        document.getElementById('color-mode-bar').classList.add('show');
+        document.getElementById('editor-toolbar').classList.add('show');
+        document.getElementById('coords-display').classList.add('show');
         updateWithFilter();
         enableRider();
+        updateTrackList();
 
         document.getElementById('download-btn').disabled = false;
         document.getElementById('map-hint').style.display = 'none';
@@ -1398,6 +1748,456 @@
         });
     }
 
+    function initColorMode() {
+        const bar = document.getElementById('color-mode-bar');
+        bar.addEventListener('click', e => {
+            const btn = e.target.closest('.color-mode-btn');
+            if (!btn) return;
+            const mode = btn.dataset.mode;
+
+            bar.querySelectorAll('.color-mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.colorMode = mode;
+
+            if (state.gpxPoints.length > 0) {
+                if (mode === 'none') {
+                    renderTrack(state.gpxPoints);
+                    document.getElementById('color-legend').classList.remove('show');
+                } else {
+                    renderColoredTrack(state.gpxPoints, mode);
+                }
+            }
+        });
+    }
+
+    function initDistanceMarkers() {
+        const existing = document.getElementById('distance-markers-toggle');
+        if (existing) return;
+        const filterControls = document.getElementById('filter-controls');
+        const row = document.createElement('div');
+        row.className = 'filter-row';
+        row.innerHTML = `
+            <label class="filter-toggle">
+                <input type="checkbox" id="distance-markers-toggle">
+                <span>距离标记（每km）</span>
+            </label>
+        `;
+        filterControls.appendChild(row);
+
+        document.getElementById('distance-markers-toggle').addEventListener('change', function() {
+            if (this.checked) addDistanceMarkers();
+            else removeDistanceMarkers();
+        });
+    }
+
+    function initContextMenu() {
+        const menu = document.getElementById('context-menu');
+        let contextLatLng = null;
+
+        state.map.on('contextmenu', function(e) {
+            e.originalEvent.preventDefault();
+            contextLatLng = e.latlng;
+            if (contextMarker) state.map.removeLayer(contextMarker);
+            contextMarker = L.marker(e.latlng, {
+                icon: L.divIcon({
+                    html: '<div style="font-size:20px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3));">📌</div>',
+                    iconSize: [24, 24], iconAnchor: [12, 24], className: ''
+                })
+            }).addTo(state.map);
+
+            menu.style.left = e.originalEvent.pageX + 'px';
+            menu.style.top = e.originalEvent.pageY + 'px';
+            menu.classList.add('show');
+        });
+
+        document.addEventListener('click', () => menu.classList.remove('show'));
+
+        menu.addEventListener('click', e => {
+            const item = e.target.closest('.context-menu-item');
+            if (!item) return;
+            const action = item.dataset.action;
+
+            if (action === 'mark') {
+                if (contextMarker) contextMarker.bindPopup('📌 标记点').openPopup();
+            } else if (action === 'copy-coords' && contextLatLng) {
+                navigator.clipboard.writeText(`${contextLatLng.lat.toFixed(6)}, ${contextLatLng.lng.toFixed(6)}`);
+            } else if (action === 'center-map' && contextLatLng) {
+                state.map.setView(contextLatLng, state.map.getZoom());
+            } else if (action === 'measure-here' && contextLatLng) {
+                startMeasureFrom(contextLatLng);
+            }
+
+            if (contextMarker && action !== 'mark') {
+                state.map.removeLayer(contextMarker);
+                contextMarker = null;
+            }
+            menu.classList.remove('show');
+        });
+
+        state.map.on('click', function() {
+            if (contextMarker) {
+                state.map.removeLayer(contextMarker);
+                contextMarker = null;
+            }
+        });
+    }
+
+    let contextMarker = null;
+
+    function initMeasureTool() {
+        const btn = document.getElementById('tool-measure');
+        const result = document.getElementById('measure-result');
+
+        btn.addEventListener('click', () => {
+            state.measureMode = !state.measureMode;
+            btn.classList.toggle('active', state.measureMode);
+            document.getElementById('map').style.cursor = state.measureMode ? 'crosshair' : '';
+
+            if (!state.measureMode) {
+                clearMeasure();
+                result.classList.remove('show');
+            } else {
+                result.textContent = '点击地图放置测距点，双击结束';
+                result.classList.add('show');
+            }
+        });
+
+        state.map.on('click', function(e) {
+            if (!state.measureMode) return;
+
+            state.measurePoints.push(e.latlng);
+
+            const icon = L.divIcon({
+                html: `<div style="background:var(--accent);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,0.3);">${state.measurePoints.length}</div>`,
+                iconSize: [20, 20], iconAnchor: [10, 10], className: ''
+            });
+            const marker = L.marker(e.latlng, { icon }).addTo(state.map);
+            state.measureMarkers.push(marker);
+
+            if (state.measurePoints.length > 1) {
+                if (state.measureLine) state.map.removeLayer(state.measureLine);
+                state.measureLine = L.polyline(state.measurePoints, {
+                    color: '#e74c3c', weight: 3, dashArray: '8,6', opacity: 0.8
+                }).addTo(state.map);
+
+                let totalDist = 0;
+                for (let i = 1; i < state.measurePoints.length; i++) {
+                    totalDist += haversine(state.measurePoints[i-1], state.measurePoints[i]);
+                }
+                const distStr = totalDist > 1000 ? (totalDist / 1000).toFixed(2) + ' km' : Math.round(totalDist) + ' m';
+                result.textContent = `总距离: ${distStr} (${state.measurePoints.length} 个点)`;
+                result.classList.add('show');
+            }
+        });
+
+        state.map.on('dblclick', function() {
+            if (!state.measureMode) return;
+            state.measureMode = false;
+            btn.classList.remove('active');
+            document.getElementById('map').style.cursor = '';
+            if (state.measurePoints.length === 0) result.classList.remove('show');
+        });
+    }
+
+    function startMeasureFrom(latlng) {
+        clearMeasure();
+        state.measureMode = true;
+        document.getElementById('tool-measure').classList.add('active');
+        document.getElementById('map').style.cursor = 'crosshair';
+        state.measurePoints.push(latlng);
+
+        const icon = L.divIcon({
+            html: `<div style="background:var(--accent);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,0.3);">1</div>`,
+            iconSize: [20, 20], iconAnchor: [10, 10], className: ''
+        });
+        const marker = L.marker(latlng, { icon }).addTo(state.map);
+        state.measureMarkers.push(marker);
+
+        const result = document.getElementById('measure-result');
+        result.textContent = '继续点击添加测距点，双击结束';
+        result.classList.add('show');
+    }
+
+    function clearMeasure() {
+        state.measurePoints = [];
+        if (state.measureLine) { state.map.removeLayer(state.measureLine); state.measureLine = null; }
+        state.measureMarkers.forEach(m => state.map.removeLayer(m));
+        state.measureMarkers = [];
+    }
+
+    function initCoordsDisplay() {
+        const display = document.getElementById('coords-display');
+        state.map.on('mousemove', function(e) {
+            display.textContent = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+        });
+    }
+
+    function initEditorToolbar() {
+        const undoBtn = document.getElementById('tool-undo');
+        const redoBtn = document.getElementById('tool-redo');
+        const addBtn = document.getElementById('tool-addpoint');
+        const deleteBtn = document.getElementById('tool-deletepoint');
+
+        undoBtn.addEventListener('click', () => {
+            if (state.undoStack.length === 0) return;
+            const action = state.undoStack.pop();
+            state.redoStack.push(action);
+            if (action.type === 'add') {
+                state.rawPoints.splice(action.index, 1);
+            } else if (action.type === 'delete') {
+                state.rawPoints.splice(action.index, 0, action.point);
+            } else if (action.type === 'move') {
+                state.rawPoints[action.index] = action.oldPoint;
+            }
+            updateWithFilter();
+            enableRider();
+            updateUndoRedoButtons();
+        });
+
+        redoBtn.addEventListener('click', () => {
+            if (state.redoStack.length === 0) return;
+            const action = state.redoStack.pop();
+            state.undoStack.push(action);
+            if (action.type === 'add') {
+                state.rawPoints.splice(action.index, 0, action.point);
+            } else if (action.type === 'delete') {
+                state.rawPoints.splice(action.index, 1);
+            } else if (action.type === 'move') {
+                state.rawPoints[action.index] = action.newPoint;
+            }
+            updateWithFilter();
+            enableRider();
+            updateUndoRedoButtons();
+        });
+
+        addBtn.addEventListener('click', () => {
+            state.addPointMode = !state.addPointMode;
+            addBtn.classList.toggle('active', state.addPointMode);
+            state.deletePointMode = false;
+            deleteBtn.classList.remove('active');
+            document.getElementById('map').style.cursor = state.addPointMode ? 'crosshair' : '';
+            if (!state.addPointMode) removeEditHandles();
+        });
+
+        deleteBtn.addEventListener('click', () => {
+            state.deletePointMode = !state.deletePointMode;
+            deleteBtn.classList.toggle('active', state.deletePointMode);
+            state.addPointMode = false;
+            addBtn.classList.remove('active');
+            document.getElementById('map').style.cursor = state.deletePointMode ? 'crosshair' : '';
+            if (state.deletePointMode) showEditHandles();
+            else removeEditHandles();
+        });
+
+        state.map.on('click', function(e) {
+            if (state.addPointMode && state.rawPoints.length > 0) {
+                let minDist = Infinity;
+                let insertIdx = state.rawPoints.length;
+                for (let i = 1; i < state.rawPoints.length; i++) {
+                    const d = distToSegment(e.latlng, state.rawPoints[i-1], state.rawPoints[i]);
+                    if (d < minDist) { minDist = d; insertIdx = i; }
+                }
+                state.undoStack.push({ type: 'add', index: insertIdx, point: { lat: e.latlng.lat, lon: e.latlng.lng, ele: 0, time: null } });
+                state.redoStack = [];
+                state.rawPoints.splice(insertIdx, 0, { lat: e.latlng.lat, lon: e.latlng.lng, ele: 0, time: null });
+                updateWithFilter();
+                enableRider();
+                updateUndoRedoButtons();
+            }
+        });
+    }
+
+    function distToSegment(p, a, b) {
+        const pLatLng = state.map.latLngToLayerPoint(L.latLng(p.lat, p.lng || p.lon));
+        const aLatLng = state.map.latLngToLayerPoint(L.latLng(a.lat, a.lon));
+        const bLatLng = state.map.latLngToLayerPoint(L.latLng(b.lat, b.lon));
+        const ab = bLatLng.subtract(aLatLng);
+        const ap = pLatLng.subtract(aLatLng);
+        const t = Math.max(0, Math.min(1, ap.x * ab.x + ap.y * ab.y) / (ab.x * ab.x + ab.y * ab.y));
+        const proj = aLatLng.add(ab.multiplyBy(t));
+        return pLatLng.distanceTo(proj);
+    }
+
+    function showEditHandles() {
+        removeEditHandles();
+        state.gpxPoints.forEach((pt, i) => {
+            const icon = L.divIcon({
+                html: `<div data-idx="${i}" style="width:10px;height:10px;background:#e74c3c;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.3);cursor:pointer;"></div>`,
+                iconSize: [10, 10], iconAnchor: [5, 5], className: 'edit-handle'
+            });
+            const marker = L.marker([pt.lat, pt.lon], { icon, draggable: true }).addTo(state.map);
+            marker.on('dragend', function(e) {
+                const idx = parseInt(e.target.getElement().querySelector('.edit-handle div').dataset.idx);
+                const newLat = e.target.getLatLng().lat;
+                const newLng = e.target.getLatLng().lng;
+                state.undoStack.push({ type: 'move', index: idx, oldPoint: { ...state.rawPoints[idx] }, newPoint: { ...state.rawPoints[idx], lat: newLat, lon: newLng } });
+                state.redoStack = [];
+                state.rawPoints[idx].lat = newLat;
+                state.rawPoints[idx].lon = newLng;
+                updateWithFilter();
+                enableRider();
+                updateUndoRedoButtons();
+            });
+            marker.on('click', function(e) {
+                if (!state.deletePointMode) return;
+                L.DomEvent.stopPropagation(e);
+                const idx = parseInt(e.target.getElement().querySelector('.edit-handle div').dataset.idx);
+                state.undoStack.push({ type: 'delete', index: idx, point: { ...state.rawPoints[idx] } });
+                state.redoStack = [];
+                state.rawPoints.splice(idx, 1);
+                updateWithFilter();
+                enableRider();
+                updateUndoRedoButtons();
+                showEditHandles();
+            });
+            state.editHandleMarkers.push(marker);
+        });
+    }
+
+    function removeEditHandles() {
+        state.editHandleMarkers.forEach(m => state.map.removeLayer(m));
+        state.editHandleMarkers = [];
+    }
+
+    function updateUndoRedoButtons() {
+        document.getElementById('tool-undo').disabled = state.undoStack.length === 0;
+        document.getElementById('tool-redo').disabled = state.redoStack.length === 0;
+    }
+
+    const TRACK_COLORS = ['#87314e', '#2196F3', '#4CAF50', '#FF9800', '#9C27B0', '#00BCD4', '#F44336', '#795548'];
+    let trackColorIdx = 0;
+
+    function updateTrackList() {
+        const container = document.querySelector('.detail-card h3:has(+ .track-list)');
+        if (!container) return;
+    }
+
+    function addTrackToList(name, color) {
+    }
+
+    function removeTrackFromList(index) {
+    }
+
+    function initElevationInteraction() {
+        const canvas = document.getElementById('elevation-chart');
+        const card = document.getElementById('elevation-card');
+        let hoverMarker = null;
+        let crosshairLine = null;
+
+        card.addEventListener('mouseenter', () => {
+            if (!state.gpxPoints.length) return;
+            hoverMarker = L.circleMarker([0, 0], {
+                radius: 6, color: '#fff', fillColor: 'var(--accent)',
+                fillOpacity: 1, weight: 2, className: 'elevation-hover-marker'
+            }).addTo(state.map);
+        });
+
+        card.addEventListener('mouseleave', () => {
+            if (hoverMarker) { state.map.removeLayer(hoverMarker); hoverMarker = null; }
+            if (crosshairLine) { canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height); drawElevationProfile(state.gpxPoints); crosshairLine = null; }
+        });
+
+        canvas.addEventListener('mousemove', function(e) {
+            if (!state.gpxPoints.length || !hoverMarker) return;
+            const rect = canvas.getBoundingClientRect();
+            const pad = { left: 50, right: 15, top: 10, bottom: 24 };
+            const cw = rect.width - pad.left - pad.right;
+            const mx = e.clientX - rect.left - pad.left;
+            const ratio = Math.max(0, Math.min(1, mx / cw));
+
+            let cumDist = [0];
+            for (let i = 1; i < state.gpxPoints.length; i++) {
+                cumDist.push(cumDist[i-1] + haversine(state.gpxPoints[i-1], state.gpxPoints[i]));
+            }
+            const totalDist = cumDist[cumDist.length - 1];
+            const targetDist = ratio * totalDist;
+
+            let ptIdx = 0;
+            for (let i = 1; i < cumDist.length; i++) {
+                if (cumDist[i] >= targetDist) { ptIdx = i; break; }
+            }
+            const pt = state.gpxPoints[ptIdx];
+            hoverMarker.setLatLng([pt.lat, pt.lon]);
+
+            drawElevationProfile(state.gpxPoints);
+
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const canvasRect = canvas.getBoundingClientRect();
+            const drawCw = canvasRect.width - pad.left - pad.right;
+            const drawCh = canvasRect.height - pad.top - pad.bottom;
+            const x = pad.left + ratio * drawCw;
+
+            ctx.save();
+            ctx.scale(dpr, dpr);
+            ctx.strokeStyle = 'rgba(135,49,78,0.6)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 3]);
+            ctx.beginPath();
+            ctx.moveTo(x, pad.top);
+            ctx.lineTo(x, pad.top + drawCh);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = 'rgba(30,30,30,0.85)';
+            ctx.beginPath();
+            const tipW = 110, tipH = 42, tipX = Math.min(x + 8, canvasRect.width - pad.right - tipW - 4), tipY = pad.top + 8;
+            const r = 6;
+            ctx.moveTo(tipX + r, tipY);
+            ctx.lineTo(tipX + tipW - r, tipY);
+            ctx.quadraticCurveTo(tipX + tipW, tipY, tipX + tipW, tipY + r);
+            ctx.lineTo(tipX + tipW, tipY + tipH - r);
+            ctx.quadraticCurveTo(tipX + tipW, tipY + tipH, tipX + tipW - r, tipY + tipH);
+            ctx.lineTo(tipX + r, tipY + tipH);
+            ctx.quadraticCurveTo(tipX, tipY + tipH, tipX, tipY + tipH - r);
+            ctx.lineTo(tipX, tipY + r);
+            ctx.quadraticCurveTo(tipX, tipY, tipX + r, tipY);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 11px -apple-system, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(`${(targetDist / 1000).toFixed(2)} km`, tipX + 8, tipY + 16);
+            ctx.font = '11px -apple-system, sans-serif';
+            ctx.fillText(`海拔 ${Math.round(pt.ele)} m`, tipX + 8, tipY + 32);
+
+            const scaleY = pad.top + drawCh - ((pt.ele - Math.min(...state.gpxPoints.map(p => p.ele))) / (Math.max(...state.gpxPoints.map(p => p.ele)) - Math.min(...state.gpxPoints.map(p => p.ele)) || 1)) * drawCh;
+            ctx.beginPath();
+            ctx.arc(x, scaleY, 5, 0, Math.PI * 2);
+            ctx.fillStyle = 'var(--accent)';
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.restore();
+        });
+
+        canvas.addEventListener('click', function(e) {
+            if (!state.gpxPoints.length) return;
+            const rect = canvas.getBoundingClientRect();
+            const pad = { left: 50, right: 15 };
+            const cw = rect.width - pad.left - pad.right;
+            const mx = e.clientX - rect.left - pad.left;
+            const ratio = Math.max(0, Math.min(1, mx / cw));
+
+            let cumDist = [0];
+            for (let i = 1; i < state.gpxPoints.length; i++) {
+                cumDist.push(cumDist[i-1] + haversine(state.gpxPoints[i-1], state.gpxPoints[i]));
+            }
+            const totalDist = cumDist[cumDist.length - 1];
+            const targetDist = ratio * totalDist;
+
+            let ptIdx = 0;
+            for (let i = 1; i < cumDist.length; i++) {
+                if (cumDist[i] >= targetDist) { ptIdx = i; break; }
+            }
+            const pt = state.gpxPoints[ptIdx];
+            state.map.setView([pt.lat, pt.lon], Math.max(state.map.getZoom(), 14));
+        });
+    }
+
     function init() {
         initMap();
         initLayerSwitcher();
@@ -1407,6 +2207,14 @@
         initFilterControls();
         initVirtualRider();
         initPoi();
+        initColorMode();
+        initDistanceMarkers();
+        initContextMenu();
+        initMeasureTool();
+        initCoordsDisplay();
+        initEditorToolbar();
+        initElevationInteraction();
+        updateUndoRedoButtons();
     }
 
     if (document.readyState === 'loading') {
