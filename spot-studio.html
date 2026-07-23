@@ -1003,9 +1003,7 @@
         updateColorLegend(colorMode, minVal, maxVal);
         if (colorMode === 'slope') updateSlopeLegend();
 
-        if (document.getElementById('distance-markers-toggle') && document.getElementById('distance-markers-toggle').checked) {
-            addDistanceMarkers();
-        }
+        if (state.markerInterval > 0) addDistanceMarkers();
     }
 
     function updateColorLegend(mode, minVal, maxVal) {
