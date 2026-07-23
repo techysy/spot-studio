@@ -1472,12 +1472,26 @@
         });
     }
 
+    function snapToTrack(lat, lng) {
+        if (!state.gpxPoints.length) return { lat, lng };
+        let minDist = Infinity;
+        let snapped = { lat, lng };
+        for (const pt of state.gpxPoints) {
+            const d = haversine({ lat, lon: lng }, { lat: pt.lat, lon: pt.lon });
+            if (d < minDist) { minDist = d; snapped = { lat: pt.lat, lng: pt.lon }; }
+        }
+        return snapped;
+    }
+
     function addPoi(lat, lng, type, name) {
         const info = POI_TYPES[type];
-        const marker = L.marker([lat, lng], { icon: createPoiIcon(type) }).addTo(state.map);
+        const snapped = snapToTrack(lat, lng);
+        const dist = haversine({ lat, lon: lng }, { lat: snapped.lat, lon: snapped.lng });
+        const marker = L.marker([snapped.lat, snapped.lng], { icon: createPoiIcon(type) }).addTo(state.map);
         const poiName = name || info.label;
-        marker.bindPopup(`<b>${info.emoji} ${poiName}</b>`);
-        const poi = { lat, lng, type, name: poiName, marker };
+        const snapText = dist > 1 ? ` (吸附 ${Math.round(dist)}m)` : '';
+        marker.bindPopup(`<b>${info.emoji} ${poiName}</b>${snapText}`);
+        const poi = { lat: snapped.lat, lng: snapped.lng, type, name: poiName, marker };
         pois.push(poi);
         renderPoiList();
     }
@@ -1527,7 +1541,8 @@
             if (!Array.isArray(data)) return;
             data.forEach(p => {
                 if (p.lat && p.lng && p.type && POI_TYPES[p.type]) {
-                    addPoi(p.lat, p.lng, p.type, p.name);
+                    const snapped = snapToTrack(p.lat, p.lng);
+                    addPoi(snapped.lat, snapped.lng, p.type, p.name);
                 }
             });
         } catch (e) {
