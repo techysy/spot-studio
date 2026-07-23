@@ -1006,9 +1006,9 @@
         removeDistanceMarkers();
         if (!state.gpxPoints.length) return;
 
+        const intervalKm = parseInt(document.getElementById('distance-markers-interval').value) || 1;
         let cumDist = 0;
-        let nextMarker = 1;
-        const interval = cumDist > 50 ? 10 : (cumDist > 20 ? 5 : 2);
+        let nextMarker = intervalKm;
 
         for (let i = 1; i < state.gpxPoints.length; i++) {
             cumDist += haversine(state.gpxPoints[i-1], state.gpxPoints[i]);
@@ -1020,7 +1020,7 @@
                 const marker = L.marker([state.gpxPoints[i].lat, state.gpxPoints[i].lon], { icon })
                     .addTo(state.map).bindPopup(`${nextMarker} km`);
                 state.distanceMarkers.push(marker);
-                nextMarker++;
+                nextMarker += intervalKm;
             }
         }
     }
@@ -1622,14 +1622,25 @@
         row.innerHTML = `
             <label class="filter-toggle">
                 <input type="checkbox" id="distance-markers-toggle">
-                <span>距离标记（每km）</span>
+                <span>距离标记</span>
             </label>
+            <div class="filter-slider-group">
+                <select id="distance-markers-interval" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82em;background:var(--card);">
+                    <option value="1">每 1 km</option>
+                    <option value="2">每 2 km</option>
+                    <option value="5">每 5 km</option>
+                    <option value="10">每 10 km</option>
+                </select>
+            </div>
         `;
         filterControls.appendChild(row);
 
         document.getElementById('distance-markers-toggle').addEventListener('change', function() {
             if (this.checked) addDistanceMarkers();
             else removeDistanceMarkers();
+        });
+        document.getElementById('distance-markers-interval').addEventListener('change', function() {
+            if (document.getElementById('distance-markers-toggle').checked) addDistanceMarkers();
         });
     }
 
