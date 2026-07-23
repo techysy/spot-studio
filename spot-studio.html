@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>骑行活动发布</title>
-    <meta property="og:title" content="骑行活动发布">
-    <meta property="og:description" content="骑行活动详情与GPX轨迹">
+    <title>spot-studio</title>
+    <meta property="og:title" content="spot-studio">
+    <meta property="og:description" content="骑行 & 徒步活动发布平台 — GPX 轨迹渲染 + 机位踩点">
     <meta property="og:type" content="website">
     <link rel="stylesheet" href="leaflet.css" />
     <style>
@@ -663,7 +663,7 @@
 </section>
 
 <footer class="footer">
-    <p>© 2024 shiyangyu.com · 骑行活动发布平台</p>
+    <p>© 2024 shiyangyu.com · spot-studio</p>
 </footer>
 
 <div class="modal-overlay" id="modal-overlay">
@@ -753,6 +753,7 @@
         deletePointMode: false,
         editHandleMarkers: [],
         avgSpeed: 25,
+        activityType: 'cycling',
         markerInterval: 0
     };
 
@@ -1161,8 +1162,17 @@
             totalElevationGain: totalEleGain,
             duration,
             waypoints: uniqueWaypoints,
-            links: parseGpxLinks(doc)
+            links: parseGpxLinks(doc),
+            activityType: detectActivityType(doc)
         };
+    }
+
+    function detectActivityType(doc) {
+        const typeEl = doc.querySelector('trk > type');
+        if (!typeEl) return 'cycling';
+        const t = typeEl.textContent.trim().toLowerCase();
+        if (['hike', 'hiking', 'walk', 'walking', 'run', 'running', '徒步', '跑步', '步行'].some(k => t.includes(k))) return 'hiking';
+        return 'cycling';
     }
 
     function parseGpxLinks(doc) {
@@ -1311,6 +1321,16 @@
         ctx.stroke();
     }
 
+    function updateActivityIcon() {
+        const icon = state.activityType === 'hiking' ? '🥾' : '🚴';
+        const speed = state.activityType === 'hiking' ? 5 : 25;
+        document.querySelector('#stat-distance-card .stat-icon').textContent = icon;
+        if (state.avgSpeed === 25 || state.avgSpeed === 5) {
+            state.avgSpeed = speed;
+            document.getElementById('speed-display').textContent = speed;
+        }
+    }
+
     function updateStats(gpxResult) {
         const distKm = (gpxResult.totalDistance / 1000).toFixed(2);
         const eleGain = Math.round(gpxResult.totalElevationGain);
@@ -1341,6 +1361,8 @@
         state.fileName = fileName || 'route.gpx';
         state.undoStack = [];
         state.redoStack = [];
+        state.activityType = result.activityType || 'cycling';
+        updateActivityIcon();
 
         const titleText = fileName ? fileName.replace(/\.gpx$/i, '') : '';
         document.getElementById('title').textContent = titleText;
