@@ -399,7 +399,7 @@
         .color-legend-title { font-size: 0.75em; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600; }
         .color-legend-bar {
             height: 12px; border-radius: 3px; margin-bottom: 4px;
-            background: linear-gradient(to right, hsl(240,55%,50%), hsl(180,55%,50%), hsl(120,55%,50%), hsl(60,55%,50%), hsl(0,55%,50%));
+            background: linear-gradient(to right, hsl(240,70%,50%), hsl(180,70%,50%), hsl(120,70%,50%), hsl(60,70%,50%), hsl(0,70%,50%));
         }
         .color-legend-labels { display: flex; justify-content: space-between; font-size: 0.7em; color: var(--text-muted); }
 
@@ -971,17 +971,17 @@ if (!window.L) {
     }
 
     function getColorGradient(value, min, max) {
-        if (max === min) return hslToHex(120, 55, 50);
+        if (max === min) return hslToHex(120, 70, 50);
         const ratio = Math.max(0, Math.min(1, (value - min) / (max - min)));
         const h = (1 - ratio) * 240;
-        return hslToHex(h, 55, 50);
+        return hslToHex(h, 70, 50);
     }
 
     function getSlopeColor(grade) {
         const clamped = Math.max(-15, Math.min(15, grade));
         const ratio = (clamped + 15) / 30;
         const h = (1 - ratio) * 240;
-        return hslToHex(h, 55, 50);
+        return hslToHex(h, 70, 50);
     }
 
     function renderColoredTrack(points, colorMode) {
@@ -1073,12 +1073,12 @@ if (!window.L) {
             title.textContent = '海拔';
             minLabel.textContent = Math.round(minVal) + 'm';
             maxLabel.textContent = Math.round(maxVal) + 'm';
-            bar.style.background = 'linear-gradient(to right, hsl(240,80%,50%), hsl(180,80%,50%), hsl(120,80%,50%), hsl(60,80%,50%), hsl(0,80%,50%))';
+            bar.style.background = 'linear-gradient(to right, hsl(240,70%,50%), hsl(180,70%,50%), hsl(120,70%,50%), hsl(60,70%,50%), hsl(0,70%,50%))';
         } else if (mode === 'slope') {
             title.textContent = '坡度';
             minLabel.textContent = '-15%';
             maxLabel.textContent = '+15%';
-            bar.style.background = 'linear-gradient(to right, hsl(240,80%,50%), hsl(180,80%,50%), hsl(120,80%,50%), hsl(60,80%,50%), hsl(0,80%,50%))';
+            bar.style.background = 'linear-gradient(to right, hsl(240,70%,50%), hsl(180,70%,50%), hsl(120,70%,50%), hsl(60,70%,50%), hsl(0,70%,50%))';
         }
     }
 
