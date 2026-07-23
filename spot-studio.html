@@ -607,6 +607,20 @@
 
 <section class="details-section">
     <div class="detail-card">
+        <h3>📂 GPX 文件</h3>
+        <div class="upload-zone" id="upload-zone">
+            <div class="upload-zone-icon">📁</div>
+            <div class="upload-zone-text">点击选择或拖拽 GPX 文件到此处</div>
+        </div>
+        <div class="gpx-actions">
+            <button class="btn btn-primary" id="upload-btn">📤 上传 GPX</button>
+            <button class="btn btn-secondary" id="download-btn" disabled>⬇️ 下载 GPX</button>
+        </div>
+        <div class="gpx-info" id="gpx-info"></div>
+        <input type="file" id="gpx-input" accept=".gpx" hidden>
+    </div>
+
+    <div class="detail-card">
         <h3>🗺️ 路书链接</h3>
         <div class="route-links" id="route-links">
             <a href="#" class="route-link strava" target="_blank" id="link-strava">
@@ -633,20 +647,6 @@
                 <input type="url" id="input-garmin" placeholder="https://connect.garmin.com/...">
             </div>
         </div>
-    </div>
-
-    <div class="detail-card">
-        <h3>📂 GPX 文件</h3>
-        <div class="upload-zone" id="upload-zone">
-            <div class="upload-zone-icon">📁</div>
-            <div class="upload-zone-text">点击选择或拖拽 GPX 文件到此处</div>
-        </div>
-        <div class="gpx-actions">
-            <button class="btn btn-primary" id="upload-btn">📤 上传 GPX</button>
-            <button class="btn btn-secondary" id="download-btn" disabled>⬇️ 下载 GPX</button>
-        </div>
-        <div class="gpx-info" id="gpx-info"></div>
-        <input type="file" id="gpx-input" accept=".gpx" hidden>
     </div>
 
     <div class="detail-card poi-section">
