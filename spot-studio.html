@@ -792,7 +792,7 @@
         deletePointMode: false,
         editHandleMarkers: [],
         avgSpeed: 25,
-        markerInterval: 1
+        markerInterval: 0
     };
 
     let filterEnabled = true;
@@ -1531,7 +1531,7 @@
             windowSlider.value = smoothWindow;
             windowVal.textContent = smoothWindow;
             hint.textContent = filterEnabled
-                ? `已过滤 ${Math.round(state.totalElevationGain - calcStatsFromPoints(state.rawPoints).totalElevationGain)}m 无效爬升`
+                ? `已过滤 ${Math.round(calcStatsFromPoints(state.rawPoints).totalElevationGain - state.totalElevationGain)}m 无效爬升`
                 : '隧道/桥梁过滤已关闭，显示原始GPS数据';
             overlay.classList.add('show');
         });
