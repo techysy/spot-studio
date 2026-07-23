@@ -399,7 +399,7 @@
         .color-legend-title { font-size: 0.75em; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600; }
         .color-legend-bar {
             height: 12px; border-radius: 3px; margin-bottom: 4px;
-            background: linear-gradient(to right, hsl(240,80%,50%), hsl(180,80%,50%), hsl(120,80%,50%), hsl(60,80%,50%), hsl(0,80%,50%));
+            background: linear-gradient(to right, hsl(240,55%,50%), hsl(180,55%,50%), hsl(120,55%,50%), hsl(60,55%,50%), hsl(0,55%,50%));
         }
         .color-legend-labels { display: flex; justify-content: space-between; font-size: 0.7em; color: var(--text-muted); }
 
@@ -760,6 +760,9 @@
         gpxData: null,
         rawPoints: [],
         gpxPoints: [],
+        cumDist: [],
+        totalDist: 0,
+        baseCanvas: null,
         fileName: '',
         totalDistance: 0,
         totalElevationGain: 0,
@@ -963,17 +966,17 @@
     }
 
     function getColorGradient(value, min, max) {
-        if (max === min) return hslToHex(120, 70, 50);
+        if (max === min) return hslToHex(120, 55, 50);
         const ratio = Math.max(0, Math.min(1, (value - min) / (max - min)));
         const h = (1 - ratio) * 240;
-        return hslToHex(h, 80, 50);
+        return hslToHex(h, 55, 50);
     }
 
     function getSlopeColor(grade) {
         const clamped = Math.max(-15, Math.min(15, grade));
         const ratio = (clamped + 15) / 30;
         const h = (1 - ratio) * 240;
-        return hslToHex(h, 80, 50);
+        return hslToHex(h, 55, 50);
     }
 
     function renderColoredTrack(points, colorMode) {
@@ -1405,6 +1408,14 @@
         ctx.strokeStyle = '#87314e';
         ctx.lineWidth = 2;
         ctx.stroke();
+
+        state.cumDist = cumulativeDist;
+        state.totalDist = totalDist;
+        const offscreen = document.createElement('canvas');
+        offscreen.width = canvas.width;
+        offscreen.height = canvas.height;
+        offscreen.getContext('2d').drawImage(canvas, 0, 0);
+        state.baseCanvas = offscreen;
     }
 
     function updateActivityIcon() {
@@ -2117,19 +2128,25 @@
         const canvas = document.getElementById('elevation-chart');
         const card = document.getElementById('elevation-card');
         let hoverMarker = null;
-        let crosshairLine = null;
 
         card.addEventListener('mouseenter', () => {
             if (!state.gpxPoints.length) return;
             hoverMarker = L.circleMarker([0, 0], {
-                radius: 6, color: '#fff', fillColor: 'var(--accent)',
+                radius: 6, color: '#fff', fillColor: '#5ba3e6',
                 fillOpacity: 1, weight: 2, className: 'elevation-hover-marker'
             }).addTo(state.map);
         });
 
         card.addEventListener('mouseleave', () => {
             if (hoverMarker) { state.map.removeLayer(hoverMarker); hoverMarker = null; }
-            if (crosshairLine) { canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height); drawElevationProfile(state.gpxPoints); crosshairLine = null; }
+            if (state.baseCanvas) {
+                const ctx = canvas.getContext('2d');
+                const dpr = window.devicePixelRatio || 1;
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(state.baseCanvas, 0, 0);
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
         });
 
         canvas.addEventListener('mousemove', function(e) {
@@ -2140,32 +2157,37 @@
             const mx = e.clientX - rect.left - pad.left;
             const ratio = Math.max(0, Math.min(1, mx / cw));
 
-            let cumDist = [0];
-            for (let i = 1; i < state.gpxPoints.length; i++) {
-                cumDist.push(cumDist[i-1] + haversine(state.gpxPoints[i-1], state.gpxPoints[i]));
-            }
-            const totalDist = cumDist[cumDist.length - 1];
-            const targetDist = ratio * totalDist;
+            const targetDist = ratio * state.totalDist;
 
             let ptIdx = 0;
-            for (let i = 1; i < cumDist.length; i++) {
-                if (cumDist[i] >= targetDist) { ptIdx = i; break; }
+            for (let i = 1; i < state.cumDist.length; i++) {
+                if (state.cumDist[i] >= targetDist) { ptIdx = i; break; }
             }
             const pt = state.gpxPoints[ptIdx];
             hoverMarker.setLatLng([pt.lat, pt.lon]);
 
-            drawElevationProfile(state.gpxPoints);
-
             const ctx = canvas.getContext('2d');
             const dpr = window.devicePixelRatio || 1;
             const canvasRect = canvas.getBoundingClientRect();
-            const drawCw = canvasRect.width - pad.left - pad.right;
-            const drawCh = canvasRect.height - pad.top - pad.bottom;
+            const cssW = canvasRect.width;
+            const cssH = canvasRect.height;
+            const drawCw = cssW - pad.left - pad.right;
+            const drawCh = cssH - pad.top - pad.bottom;
             const x = pad.left + ratio * drawCw;
 
-            ctx.save();
-            ctx.scale(dpr, dpr);
-            ctx.strokeStyle = 'rgba(135,49,78,0.6)';
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (state.baseCanvas) ctx.drawImage(state.baseCanvas, 0, 0);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            const eles = state.gpxPoints.map(p => p.ele);
+            const minEle = Math.min(...eles);
+            const maxEle = Math.max(...eles);
+            const eleRange = maxEle - minEle || 1;
+            const elePadding = eleRange * 0.1;
+            const scaleY = pad.top + drawCh - ((pt.ele - minEle + elePadding) / (eleRange + elePadding * 2)) * drawCh;
+
+            ctx.strokeStyle = 'rgba(135,49,78,0.5)';
             ctx.lineWidth = 1;
             ctx.setLineDash([4, 3]);
             ctx.beginPath();
@@ -2174,39 +2196,45 @@
             ctx.stroke();
             ctx.setLineDash([]);
 
-            ctx.fillStyle = 'rgba(30,30,30,0.85)';
+            const prevPt = ptIdx > 0 ? state.gpxPoints[ptIdx - 1] : pt;
+            const segDist = haversine(prevPt, pt);
+            const grade = segDist > 0 ? ((pt.ele - prevPt.ele) / segDist) * 100 : 0;
+
+            const tipW = 115, tipH = 54;
+            let tipX = x + 12;
+            if (tipX + tipW > cssW - pad.right) tipX = x - tipW - 12;
+            if (tipX < pad.left) tipX = pad.left;
+            const tipY = Math.max(pad.top + 2, scaleY - tipH - 10);
+
+            ctx.fillStyle = 'rgba(30,30,30,0.88)';
             ctx.beginPath();
-            const tipW = 110, tipH = 42, tipX = Math.min(x + 8, canvasRect.width - pad.right - tipW - 4), tipY = pad.top + 8;
-            const r = 6;
-            ctx.moveTo(tipX + r, tipY);
-            ctx.lineTo(tipX + tipW - r, tipY);
-            ctx.quadraticCurveTo(tipX + tipW, tipY, tipX + tipW, tipY + r);
-            ctx.lineTo(tipX + tipW, tipY + tipH - r);
-            ctx.quadraticCurveTo(tipX + tipW, tipY + tipH, tipX + tipW - r, tipY + tipH);
-            ctx.lineTo(tipX + r, tipY + tipH);
-            ctx.quadraticCurveTo(tipX, tipY + tipH, tipX, tipY + tipH - r);
-            ctx.lineTo(tipX, tipY + r);
-            ctx.quadraticCurveTo(tipX, tipY, tipX + r, tipY);
+            const tr = 8;
+            ctx.moveTo(tipX + tr, tipY);
+            ctx.lineTo(tipX + tipW - tr, tipY);
+            ctx.quadraticCurveTo(tipX + tipW, tipY, tipX + tipW, tipY + tr);
+            ctx.lineTo(tipX + tipW, tipY + tipH - tr);
+            ctx.quadraticCurveTo(tipX + tipW, tipY + tipH, tipX + tipW - tr, tipY + tipH);
+            ctx.lineTo(tipX + tr, tipY + tipH);
+            ctx.quadraticCurveTo(tipX, tipY + tipH, tipX, tipY + tipH - tr);
+            ctx.lineTo(tipX, tipY + tr);
+            ctx.quadraticCurveTo(tipX, tipY, tipX + tr, tipY);
             ctx.closePath();
             ctx.fill();
 
             ctx.fillStyle = '#fff';
-            ctx.font = 'bold 11px -apple-system, sans-serif';
-            ctx.textAlign = 'left';
-            ctx.fillText(`${(targetDist / 1000).toFixed(2)} km`, tipX + 8, tipY + 16);
             ctx.font = '11px -apple-system, sans-serif';
-            ctx.fillText(`海拔 ${Math.round(pt.ele)} m`, tipX + 8, tipY + 32);
+            ctx.textAlign = 'left';
+            ctx.fillText(`海拔：${Math.round(pt.ele)} m`, tipX + 12, tipY + 18);
+            ctx.fillText(`距离：${(targetDist / 1000).toFixed(2)} km`, tipX + 12, tipY + 34);
+            ctx.fillText(`坡度：${grade.toFixed(1)} %`, tipX + 12, tipY + 50);
 
-            const scaleY = pad.top + drawCh - ((pt.ele - Math.min(...state.gpxPoints.map(p => p.ele))) / (Math.max(...state.gpxPoints.map(p => p.ele)) - Math.min(...state.gpxPoints.map(p => p.ele)) || 1)) * drawCh;
             ctx.beginPath();
             ctx.arc(x, scaleY, 5, 0, Math.PI * 2);
-            ctx.fillStyle = 'var(--accent)';
+            ctx.fillStyle = '#5ba3e6';
             ctx.fill();
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 2;
             ctx.stroke();
-
-            ctx.restore();
         });
 
         canvas.addEventListener('click', function(e) {
@@ -2217,16 +2245,11 @@
             const mx = e.clientX - rect.left - pad.left;
             const ratio = Math.max(0, Math.min(1, mx / cw));
 
-            let cumDist = [0];
-            for (let i = 1; i < state.gpxPoints.length; i++) {
-                cumDist.push(cumDist[i-1] + haversine(state.gpxPoints[i-1], state.gpxPoints[i]));
-            }
-            const totalDist = cumDist[cumDist.length - 1];
-            const targetDist = ratio * totalDist;
+            const targetDist = ratio * state.totalDist;
 
             let ptIdx = 0;
-            for (let i = 1; i < cumDist.length; i++) {
-                if (cumDist[i] >= targetDist) { ptIdx = i; break; }
+            for (let i = 1; i < state.cumDist.length; i++) {
+                if (state.cumDist[i] >= targetDist) { ptIdx = i; break; }
             }
             const pt = state.gpxPoints[ptIdx];
             state.map.setView([pt.lat, pt.lon], Math.max(state.map.getZoom(), 14));
