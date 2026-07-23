@@ -60,6 +60,14 @@
             content: '点击输入骑行活动标题';
             opacity: 0.5;
         }
+        .hero-subtitle {
+            font-size: 0.95em;
+            color: rgba(255,255,255,0.6);
+            font-weight: 400;
+            min-height: 1.2em;
+            outline: none;
+        }
+        .hero-subtitle:empty { display: none; }
 
         .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
 
@@ -103,6 +111,32 @@
             color: var(--text-secondary);
             margin-bottom: 12px;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .elevation-btns { display: flex; gap: 6px; }
+        .ele-calibrate-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            padding: 3px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .ele-calibrate-btn:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+        .ele-calibrate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .ele-calibrate-btn.active {
+            color: var(--accent);
+            border-color: var(--accent);
         }
         #elevation-chart {
             width: 100%;
@@ -504,6 +538,7 @@
 
 <header class="hero">
     <div class="hero-title" contenteditable="true" id="title"></div>
+    <div class="hero-subtitle" contenteditable="true" id="subtitle"></div>
 </header>
 
 <section class="map-section">
@@ -561,7 +596,13 @@
 
 <section class="elevation-section">
     <div class="elevation-card" id="elevation-card">
-        <div class="elevation-title">海拔剖面 (Elevation Profile)</div>
+        <div class="elevation-title">
+            海拔剖面 (Elevation Profile)
+            <div class="elevation-btns">
+                <button class="ele-calibrate-btn" id="ele-calibrate-btn" title="校准海拔：查询 DEM 补全缺失的海拔数据">🔄 校准海拔</button>
+                <button class="ele-calibrate-btn" id="gcj02-toggle" title="坐标偏移校正：佳明等国内设备可能使用 GCJ-02 坐标系">📐 偏移校正</button>
+            </div>
+        </div>
         <canvas id="elevation-chart"></canvas>
     </div>
 </section>
@@ -626,7 +667,7 @@
             </div>
             <div class="link-input">
                 <label>iGPSPORT</label>
-                <input type="url" id="input-igp" placeholder="https://share.igpsport.com/...">
+                <input type="url" id="input-igp" placeholder="粘贴 iGPSPORT 分享链接，如 https://share.igpsport.com/...">
             </div>
             <div class="link-input">
                 <label>Garmin</label>
@@ -740,7 +781,8 @@
         editHandleMarkers: [],
         avgSpeed: 25,
         activityType: 'cycling',
-        markerInterval: 0
+        markerInterval: 0,
+        gcj02Converted: false
     };
 
     let filterEnabled = true;
@@ -825,6 +867,35 @@
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
+    const PI = Math.PI, EE = 0.00669342162296594323, A = 6378245.0;
+    function outOfChina(lat, lon) { return lon < 72.004 || lon > 137.8347 || lat < 0.8293 || lat > 55.8271; }
+    function delta(lat, lon) {
+        let dLat = -100 + 2*lon + 3*lat + 0.2*lat*lat + 0.1*lat*lon + 0.2*Math.sqrt(Math.abs(lon));
+        let dLon = 300 + lon + 2*lat + 0.1*lon*lon + 0.1*lat*lon + 0.1*Math.sqrt(Math.abs(lon));
+        dLat += 2*(20*Math.sin(6*lon*PI) + 20*Math.sin(2*lon*PI)) * 2 / 3;
+        dLat += 2*(20*Math.sin(lat*PI) + 40*Math.sin(lat/3*PI)) * 2 / 3;
+        dLat += 2*(160*Math.sin(lat/12*PI) + 320*Math.sin(lat*PI/30)) * 2 / 3;
+        dLon += 2*(20*Math.sin(6*lon*PI) + 20*Math.sin(2*lon*PI)) * 2 / 3;
+        dLon += 2*(20*Math.sin(lon*PI) + 40*Math.sin(lon/3*PI)) * 2 / 3;
+        dLon += 2*(150*Math.sin(lon/12*PI) + 300*Math.sin(lon/30*PI)) * 2 / 3;
+        const rLat = lat / 180 * PI;
+        let magic = Math.sin(rLat); magic = 1 - EE * magic * magic;
+        const sqrtMagic = Math.sqrt(magic);
+        dLat = (dLat * 180) / ((A * (1 - EE)) / (magic * sqrtMagic) * PI);
+        dLon = (dLon * 180) / (A / sqrtMagic * Math.cos(rLat) * PI);
+        return [dLat, dLon];
+    }
+    function gcj02ToWgs84(lat, lon) {
+        if (outOfChina(lat, lon)) return [lat, lon];
+        let wgsLat = lat, wgsLon = lon;
+        for (let i = 0; i < 5; i++) {
+            const [dLat, dLon] = delta(wgsLat, wgsLon);
+            wgsLat = lat - dLat;
+            wgsLon = lon - dLon;
+        }
+        return [wgsLat, wgsLon];
+    }
+
     function filterElevation(points) {
         if (!filterEnabled || points.length < 3) {
             return points.map(p => p.ele);
@@ -856,6 +927,32 @@
         }
 
         return smoothed;
+    }
+
+    async function fetchElevation(points) {
+        const BATCH_SIZE = 100;
+        const needsElevation = points.some(p => p.ele === 0);
+        if (!needsElevation) return false;
+
+        for (let i = 0; i < points.length; i += BATCH_SIZE) {
+            const batch = points.slice(i, i + BATCH_SIZE);
+            const lats = batch.map(p => p.lat).join(',');
+            const lons = batch.map(p => p.lon).join(',');
+            try {
+                const resp = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lons}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                if (data.elevation) {
+                    data.elevation.forEach((ele, idx) => {
+                        if (points[i + idx].ele === 0) points[i + idx].ele = ele;
+                    });
+                }
+            } catch (e) {
+                console.warn('海拔查询失败:', e);
+                return false;
+            }
+        }
+        return true;
     }
 
     function hslToHex(h, s, l) {
@@ -1149,7 +1246,10 @@
             duration,
             waypoints: uniqueWaypoints,
             links: parseGpxLinks(doc),
-            activityType: detectActivityType(doc)
+            activityType: detectActivityType(doc),
+            trackName: (doc.querySelector('metadata > name') || doc.querySelector('trk > name'))?.textContent?.trim() || '',
+            trackDesc: doc.querySelector('trk > desc')?.textContent?.trim() || '',
+            creator: doc.querySelector('gpx')?.getAttribute('creator') || ''
         };
     }
 
@@ -1338,30 +1438,68 @@
         info.classList.add('show');
     }
 
-    function loadGpxString(gpxString, fileName) {
+    async function loadGpxString(gpxString, fileName) {
         const result = parseGpx(gpxString);
         if (!result) return;
 
         state.gpxData = gpxString;
-        state.rawPoints = result.points;
         state.fileName = fileName || 'route.gpx';
         state.undoStack = [];
         state.redoStack = [];
         state.activityType = result.activityType || 'cycling';
         updateActivityIcon();
 
-        const titleText = fileName ? fileName.replace(/\.gpx$/i, '') : '';
+        const isGarmin = /garmin/i.test(result.creator);
+        const inChina = result.points.some(p => !outOfChina(p.lat, p.lon));
+        if (isGarmin && inChina) {
+            result.points.forEach(p => {
+                const [lat, lon] = gcj02ToWgs84(p.lat, p.lon);
+                p.lat = lat; p.lon = lon;
+            });
+            state.gcj02Converted = true;
+        } else {
+            state.gcj02Converted = false;
+        }
+        state.rawPoints = result.points;
+
+        const titleText = result.trackName || (fileName ? fileName.replace(/\.gpx$/i, '') : '');
         document.getElementById('title').textContent = titleText;
+        document.getElementById('subtitle').textContent = result.trackDesc || '';
 
         document.getElementById('poi-map-toolbar').classList.add('show');
         document.getElementById('layer-switcher').classList.add('show');
         document.getElementById('color-mode-bar').classList.add('show');
         document.getElementById('editor-toolbar').classList.add('show');
         document.getElementById('coords-display').classList.add('show');
+
+        const info = document.getElementById('gpx-info');
+        const hasZeroEle = result.points.some(p => p.ele === 0);
+        if (hasZeroEle && result.points.length > 0) {
+            info.innerHTML = '⏳ 正在查询海拔数据...';
+            info.classList.add('show');
+            const fetched = await fetchElevation(result.points);
+            if (fetched) {
+                result.totalElevationGain = 0;
+                let prevEle = null;
+                result.points.forEach(p => {
+                    if (prevEle !== null && p.ele > prevEle) {
+                        result.totalElevationGain += p.ele - prevEle;
+                    }
+                    prevEle = p.ele;
+                });
+            } else {
+                info.innerHTML = '⚠️ 海拔查询失败，使用默认值 0';
+            }
+        }
+
         updateWithFilter();
         updateTrackList();
 
         if (result.links) {
+            const garminMatch = (fileName || '').match(/COURSE_(\d+)/i);
+            if (garminMatch && !result.links.garmin) {
+                result.links.garmin = `https://connectus.garmin.cn/app/course/${garminMatch[1]}`;
+            }
             const linkMap = { strava: 'input-strava', igp: 'input-igp', garmin: 'input-garmin' };
             Object.keys(linkMap).forEach(key => {
                 if (result.links[key]) {
@@ -1417,18 +1555,24 @@
         });
 
         downloadBtn.addEventListener('click', () => {
-            if (!state.gpxData) return;
-            let gpx = state.gpxData;
+            if (!state.gpxData || state.rawPoints.length === 0) return;
+            const pts = state.rawPoints;
+            const trkpts = pts.map(p => {
+                let s = `    <trkpt lat="${p.lat.toFixed(7)}" lon="${p.lon.toFixed(7)}">`;
+                s += `\n      <ele>${p.ele.toFixed(1)}</ele>`;
+                if (p.time) s += `\n      <time>${p.time.toISOString()}</time>`;
+                s += `\n    </trkpt>`;
+                return s;
+            }).join('\n');
+            const nameEl = new DOMParser().parseFromString(state.gpxData, 'text/xml').querySelector('metadata > name');
+            const trackName = nameEl ? nameEl.textContent : '';
+            let gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx creator="spot-studio" version="1.1"\n  xmlns="http://www.topografix.com/GPX/1/1"\n  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/11.xsd">\n  <metadata>\n    <name>${trackName}</name>\n  </metadata>\n  <trk>\n    <name>${trackName}</name>\n    <trkseg>\n${trkpts}\n    </trkseg>\n  </trk>\n</gpx>`;
             if (pois.length > 0) {
                 const wpts = pois.map(p => {
                     const info = POI_TYPES[p.type];
                     return `  <wpt lat="${p.lat}" lon="${p.lng}">\n    <name>${p.name}</name>\n    <desc>${info.emoji} ${info.label}</desc>\n    <sym>${info.label}</sym>\n  </wpt>`;
                 }).join('\n');
-                if (gpx.includes('<trk>')) {
-                    gpx = gpx.replace('<trk>', wpts + '\n<trk>');
-                } else if (gpx.includes('<gpx')) {
-                    gpx = gpx.replace(/(<gpx[^>]*>)/, '$1\n' + wpts);
-                }
+                gpx = gpx.replace('<trk>', wpts + '\n<trk>');
             }
             const blob = new Blob([gpx], { type: 'application/gpx+xml' });
             const url = URL.createObjectURL(blob);
@@ -2104,6 +2248,52 @@
         initEditorToolbar();
         initElevationInteraction();
         updateUndoRedoButtons();
+
+        document.getElementById('ele-calibrate-btn').addEventListener('click', async () => {
+            if (state.rawPoints.length === 0) return;
+            const btn = document.getElementById('ele-calibrate-btn');
+            const zeroCount = state.rawPoints.filter(p => p.ele === 0).length;
+            if (zeroCount === 0) { alert('所有轨迹点已有海拔数据，无需校准'); return; }
+            btn.disabled = true;
+            btn.textContent = '⏳ 查询中...';
+            const fetched = await fetchElevation(state.rawPoints);
+            if (fetched) {
+                state.totalElevationGain = 0;
+                let prevEle = null;
+                state.rawPoints.forEach(p => {
+                    if (prevEle !== null && p.ele > prevEle) {
+                        state.totalElevationGain += p.ele - prevEle;
+                    }
+                    prevEle = p.ele;
+                });
+                updateWithFilter();
+                const info = document.getElementById('gpx-info');
+                info.innerHTML = `✅ 海拔校准完成，已补全 ${zeroCount} 个轨迹点`;
+                info.classList.add('show');
+            } else {
+                alert('海拔查询失败，请检查网络连接');
+            }
+            btn.disabled = false;
+            btn.textContent = '🔄 校准海拔';
+        });
+
+        document.getElementById('gcj02-toggle').addEventListener('click', () => {
+            if (!state.gpxData) return;
+            const result = parseGpx(state.gpxData);
+            if (!result) return;
+            const shouldConvert = !state.gcj02Converted;
+            if (shouldConvert) {
+                result.points.forEach(p => {
+                    const [lat, lon] = gcj02ToWgs84(p.lat, p.lon);
+                    p.lat = lat; p.lon = lon;
+                });
+            }
+            state.gcj02Converted = shouldConvert;
+            state.rawPoints = result.points;
+            updateWithFilter();
+            const btn = document.getElementById('gcj02-toggle');
+            btn.classList.toggle('active', shouldConvert);
+        });
 
         document.getElementById('stat-duration-card').addEventListener('click', async function() {
             const current = state.avgSpeed || 25;
