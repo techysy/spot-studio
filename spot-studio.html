@@ -7,7 +7,7 @@
     <meta property="og:title" content="spot-studio">
     <meta property="og:description" content="骑行 & 徒步活动发布平台 — GPX 轨迹渲染 + 机位踩点">
     <meta property="og:type" content="website">
-    <link rel="stylesheet" href="leaflet.css" />
+    <link rel="stylesheet" href="leaflet.css" onerror="this.onerror=null;this.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'">
     <style>
         :root {
             --primary: #311e3e;
@@ -749,6 +749,11 @@
 </div>
 
 <script src="leaflet.js"></script>
+<script>
+if (!window.L) {
+    document.write('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>');
+}
+</script>
 <script>
 (function() {
     const state = {
