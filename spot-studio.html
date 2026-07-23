@@ -544,6 +544,42 @@
         }
         .coords-display.show { display: block; }
 
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: var(--card); border-radius: 16px; padding: 28px 24px 20px;
+            width: 320px; max-width: 90vw; box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+            animation: modalIn 0.2s ease;
+        }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .modal-title {
+            font-size: 1em; font-weight: 600; color: var(--text); margin-bottom: 16px;
+        }
+        .modal-input {
+            width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+            border-radius: 10px; font-size: 0.95em; outline: none;
+            transition: border-color 0.2s; box-sizing: border-box;
+        }
+        .modal-input:focus { border-color: var(--accent); }
+        .modal-hint {
+            font-size: 0.78em; color: var(--text-muted); margin-top: 6px;
+        }
+        .modal-buttons {
+            display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end;
+        }
+        .modal-btn {
+            padding: 8px 20px; border-radius: 8px; border: none;
+            font-size: 0.88em; font-weight: 500; cursor: pointer; transition: all 0.2s;
+        }
+        .modal-btn-cancel { background: var(--bg); color: var(--text-secondary); }
+        .modal-btn-cancel:hover { background: #e8e8e8; }
+        .modal-btn-confirm { background: var(--accent); color: #fff; }
+        .modal-btn-confirm:hover { background: var(--accent-light); }
+
         @media (max-width: 768px) {
             .hero { padding: 36px 16px 32px; }
             .hero-title { font-size: 1.6em; }
@@ -744,6 +780,18 @@
     <p>© 2024 shiyangyu.com · 骑行活动发布平台</p>
 </footer>
 
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-title" id="modal-title"></div>
+        <input class="modal-input" id="modal-input" type="text">
+        <div class="modal-hint" id="modal-hint"></div>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" id="modal-cancel">取消</button>
+            <button class="modal-btn modal-btn-confirm" id="modal-confirm">确定</button>
+        </div>
+    </div>
+</div>
+
 <script src="leaflet.js"></script>
 <script>
 (function() {
@@ -781,6 +829,34 @@
     let filterEnabled = true;
     let gradientThreshold = 15;
     let smoothWindow = 7;
+
+    function showModal(title, defaultValue, hint) {
+        return new Promise(resolve => {
+            const overlay = document.getElementById('modal-overlay');
+            const input = document.getElementById('modal-input');
+            const titleEl = document.getElementById('modal-title');
+            const hintEl = document.getElementById('modal-hint');
+            titleEl.textContent = title;
+            input.value = defaultValue || '';
+            hintEl.textContent = hint || '';
+            overlay.classList.add('show');
+            input.focus();
+            input.select();
+            const close = (val) => {
+                overlay.classList.remove('show');
+                document.getElementById('modal-confirm').removeEventListener('click', onConfirm);
+                document.getElementById('modal-cancel').removeEventListener('click', onCancel);
+                input.removeEventListener('keydown', onKey);
+                resolve(val);
+            };
+            const onConfirm = () => close(input.value);
+            const onCancel = () => close(null);
+            const onKey = (e) => { if (e.key === 'Enter') close(input.value); if (e.key === 'Escape') close(null); };
+            document.getElementById('modal-confirm').addEventListener('click', onConfirm);
+            document.getElementById('modal-cancel').addEventListener('click', onCancel);
+            input.addEventListener('keydown', onKey);
+        });
+    }
 
     function initMap() {
         state.map = L.map('map', {
@@ -1544,11 +1620,12 @@
     function initPoi() {
         const toolbar = document.getElementById('poi-map-toolbar');
 
-        state.map.on('click', function(e) {
+        state.map.on('click', async function(e) {
             if (!activePoiType) return;
-            const name = prompt(`为这个${POI_TYPES[activePoiType].label}取个名字（可留空）：`, POI_TYPES[activePoiType].label);
+            const info = POI_TYPES[activePoiType];
+            const name = await showModal(`添加${info.label}`, info.label, '输入名称，留空使用默认');
             if (name === null) return;
-            addPoi(e.latlng.lat, e.latlng.lng, activePoiType, name || POI_TYPES[activePoiType].label);
+            addPoi(e.latlng.lat, e.latlng.lng, activePoiType, name || info.label);
         });
 
         toolbar.addEventListener('click', e => {
@@ -2058,9 +2135,9 @@
         initElevationInteraction();
         updateUndoRedoButtons();
 
-        document.getElementById('stat-duration-card').addEventListener('click', function() {
+        document.getElementById('stat-duration-card').addEventListener('click', async function() {
             const current = state.avgSpeed || 25;
-            const val = prompt('设置平均速度 (km/h)：', current);
+            const val = await showModal('设置平均速度', current, '范围 5-60 km/h，用于计算预估时长');
             if (val === null) return;
             const speed = parseInt(val);
             if (isNaN(speed) || speed < 5 || speed > 60) { alert('请输入 5-60 之间的数值'); return; }
