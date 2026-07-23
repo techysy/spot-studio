@@ -288,62 +288,12 @@
         .upload-zone-icon { font-size: 2em; margin-bottom: 8px; }
         .upload-zone-text { color: var(--text-secondary); font-size: 0.9em; }
 
-        .filter-controls {
-            margin-top: 14px;
-            padding: 14px;
-            background: var(--bg);
-            border-radius: 10px;
-        }
-        .filter-controls.hidden { display: none; }
-        .filter-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-        .filter-row:last-child { margin-bottom: 0; }
-        .filter-toggle {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            font-size: 0.88em;
-            font-weight: 500;
-            user-select: none;
-        }
-        .filter-toggle input[type="checkbox"] {
-            accent-color: var(--accent);
-            width: 16px;
-            height: 16px;
-        }
-        .filter-slider-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
-        }
-        .filter-slider-group label {
-            font-size: 0.8em;
-            color: var(--text-secondary);
-            white-space: nowrap;
-        }
-        .filter-slider-group input[type="range"] {
-            flex: 1;
-            accent-color: var(--accent);
-            height: 4px;
-        }
         .filter-slider-group .value {
             font-size: 0.82em;
             font-weight: 600;
             color: var(--accent);
             min-width: 32px;
             text-align: right;
-        }
-        .filter-hint {
-            font-size: 0.76em;
-            color: var(--text-muted);
-            margin-top: 6px;
-            line-height: 1.5;
         }
 
         .speed-input { display: flex; align-items: center; gap: 8px; }
@@ -394,16 +344,6 @@
         .poi-empty { font-size: 0.82em; color: var(--text-muted); padding: 12px 0; text-align: center; }
         .poi-actions { display: flex; gap: 8px; margin-top: 10px; }
         .poi-actions .btn { font-size: 0.78em; padding: 6px 12px; }
-        .filter-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 0.72em;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-        .filter-badge.active { background: #d4edda; color: #155724; }
-        .filter-badge.inactive { background: #f0f0f0; color: #888; }
 
         .footer {
             text-align: center;
@@ -580,6 +520,10 @@
         .modal-btn-confirm { background: var(--accent); color: #fff; }
         .modal-btn-confirm:hover { background: var(--accent-light); }
 
+        #filter-modal-toggle:checked + span:first-of-type { background: var(--accent); }
+        #filter-modal-toggle:checked ~ #filter-modal-dot { left: 22px; }
+        #filter-modal-toggle:focus + span:first-of-type { box-shadow: 0 0 0 2px rgba(135,49,78,0.3); }
+
         @media (max-width: 768px) {
             .hero { padding: 36px 16px 32px; }
             .hero-title { font-size: 1.6em; }
@@ -667,7 +611,7 @@
             <span class="stat-value" id="stat-distance">--</span>
             <span class="stat-label">距离 (km)</span>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" id="stat-elevation-card" style="cursor:pointer;" title="点击设置隧道/桥梁过滤">
             <div class="stat-icon">⛰️</div>
             <span class="stat-value" id="stat-elevation">--</span>
             <span class="stat-label">爬升 (m)</span>
@@ -677,7 +621,7 @@
             <span class="stat-value" id="stat-duration">--</span>
             <span class="stat-label" id="stat-duration-label">时长（<span id="speed-display">25</span>km/h）</span>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" id="stat-poi-card" style="cursor:pointer;" title="点击查看兴趣点">
             <div class="stat-icon">📍</div>
             <span class="stat-value" id="stat-poi">0</span>
             <span class="stat-label">兴趣点</span>
@@ -731,30 +675,6 @@
             <button class="btn btn-secondary" id="download-btn" disabled>⬇️ 下载 GPX</button>
         </div>
         <div class="gpx-info" id="gpx-info"></div>
-        <div class="filter-controls hidden" id="filter-controls">
-            <div class="filter-row">
-                <label class="filter-toggle">
-                    <input type="checkbox" id="filter-toggle" checked>
-                    <span>隧道/桥梁过滤</span>
-                    <span class="filter-badge active" id="filter-badge">已启用</span>
-                </label>
-            </div>
-            <div class="filter-row">
-                <div class="filter-slider-group">
-                    <label>坡度阈值</label>
-                    <input type="range" id="filter-threshold" min="5" max="30" value="15" step="1">
-                    <span class="value" id="filter-value">15%</span>
-                </div>
-            </div>
-            <div class="filter-row">
-                <div class="filter-slider-group">
-                    <label>平滑窗口</label>
-                    <input type="range" id="filter-window" min="3" max="15" value="7" step="2">
-                    <span class="value" id="filter-window-value">7</span>
-                </div>
-            </div>
-            <div class="filter-hint" id="filter-hint">过滤隧道/桥梁中的GPS异常跳点，减少无效爬升。调整坡度阈值可控制过滤强度。</div>
-        </div>
         <input type="file" id="gpx-input" accept=".gpx" hidden>
     </div>
 
@@ -793,6 +713,49 @@
         <div class="modal-buttons">
             <button class="modal-btn modal-btn-cancel" id="modal-cancel">取消</button>
             <button class="modal-btn modal-btn-confirm" id="modal-confirm">确定</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="filter-modal-overlay">
+    <div class="modal-box" style="width:360px;">
+        <div class="modal-title">隧道/桥梁过滤</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+                <input type="checkbox" id="filter-modal-toggle" style="opacity:0;width:0;height:0;" checked>
+                <span style="position:absolute;inset:0;background:#ccc;border-radius:12px;transition:0.3s;"></span>
+                <span id="filter-modal-dot" style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:0.3s;"></span>
+            </label>
+            <span id="filter-modal-status" style="font-size:0.88em;font-weight:500;">已启用</span>
+        </div>
+        <div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;font-size:0.82em;color:var(--text-secondary);margin-bottom:6px;">
+                <span>坡度阈值</span><span id="filter-modal-threshold-val" style="font-weight:600;color:var(--accent);">15%</span>
+            </div>
+            <input type="range" id="filter-modal-threshold" min="5" max="30" value="15" step="1" style="width:100%;accent-color:var(--accent);">
+        </div>
+        <div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;font-size:0.82em;color:var(--text-secondary);margin-bottom:6px;">
+                <span>平滑窗口</span><span id="filter-modal-window-val" style="font-weight:600;color:var(--accent);">7</span>
+            </div>
+            <input type="range" id="filter-modal-window" min="3" max="15" value="7" step="2" style="width:100%;accent-color:var(--accent);">
+        </div>
+        <div style="font-size:0.76em;color:var(--text-muted);line-height:1.5;margin-bottom:16px;" id="filter-modal-hint">
+            过滤隧道/桥梁中的GPS异常跳点，减少无效爬升。
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" id="filter-modal-cancel">取消</button>
+            <button class="modal-btn modal-btn-confirm" id="filter-modal-confirm">应用</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="poi-modal-overlay">
+    <div class="modal-box" style="width:380px;max-height:70vh;display:flex;flex-direction:column;">
+        <div class="modal-title">📍 兴趣点列表</div>
+        <div id="poi-modal-list" style="flex:1;overflow-y:auto;margin-bottom:16px;"></div>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-confirm" id="poi-modal-close">关闭</button>
         </div>
     </div>
 </div>
@@ -1078,8 +1041,8 @@
     function addDistanceMarkers() {
         removeDistanceMarkers();
         if (!state.gpxPoints.length) return;
-
-        const intervalKm = state.markerInterval || 1;
+        const intervalKm = state.markerInterval || 0;
+        if (intervalKm <= 0) return;
         let cumDist = 0;
         let nextMarker = intervalKm;
 
@@ -1151,18 +1114,7 @@
         drawElevationProfile(state.gpxPoints);
         updateStats(stats);
 
-        const hint = document.getElementById('filter-hint');
-        if (filterEnabled) {
-            const origStats = calcStatsFromPoints(state.rawPoints);
-            const saved = Math.round(origStats.totalElevationGain - stats.totalElevationGain);
-            hint.textContent = `已过滤 ${saved}m 无效爬升（原始 ${Math.round(origStats.totalElevationGain)}m → 当前 ${Math.round(stats.totalElevationGain)}m）`;
-        } else {
-            hint.textContent = '隧道/桥梁过滤已关闭，显示原始GPS数据';
-        }
-
-        if (document.getElementById('distance-markers-toggle') && document.getElementById('distance-markers-toggle').checked) {
-            addDistanceMarkers();
-        }
+        if (state.markerInterval > 0) addDistanceMarkers();
     }
 
     function parseGpx(gpxString) {
@@ -1413,7 +1365,6 @@
         const titleText = fileName ? fileName.replace(/\.gpx$/i, '') : '';
         document.getElementById('title').textContent = titleText;
 
-        document.getElementById('filter-controls').classList.remove('hidden');
         document.getElementById('poi-map-toolbar').classList.add('show');
         document.getElementById('layer-switcher').classList.add('show');
         document.getElementById('color-mode-bar').classList.add('show');
@@ -1533,30 +1484,51 @@
     }
 
     function initFilterControls() {
-        const toggle = document.getElementById('filter-toggle');
-        const badge = document.getElementById('filter-badge');
-        const thresholdSlider = document.getElementById('filter-threshold');
-        const thresholdValue = document.getElementById('filter-value');
-        const windowSlider = document.getElementById('filter-window');
-        const windowValue = document.getElementById('filter-window-value');
+        const overlay = document.getElementById('filter-modal-overlay');
+        const toggle = document.getElementById('filter-modal-toggle');
+        const status = document.getElementById('filter-modal-status');
+        const dot = document.getElementById('filter-modal-dot');
+        const thresholdSlider = document.getElementById('filter-modal-threshold');
+        const thresholdVal = document.getElementById('filter-modal-threshold-val');
+        const windowSlider = document.getElementById('filter-modal-window');
+        const windowVal = document.getElementById('filter-modal-window-val');
+        const hint = document.getElementById('filter-modal-hint');
 
-        toggle.addEventListener('change', () => {
-            filterEnabled = toggle.checked;
-            badge.textContent = filterEnabled ? '已启用' : '已关闭';
-            badge.className = 'filter-badge ' + (filterEnabled ? 'active' : 'inactive');
-            if (state.rawPoints.length > 0) updateWithFilter();
-        });
+        function syncToggleUI() {
+            status.textContent = toggle.checked ? '已启用' : '已关闭';
+            status.style.color = toggle.checked ? 'var(--accent)' : 'var(--text-muted)';
+        }
+        toggle.addEventListener('change', syncToggleUI);
 
         thresholdSlider.addEventListener('input', () => {
+            thresholdVal.textContent = thresholdSlider.value + '%';
+        });
+        windowSlider.addEventListener('input', () => {
+            windowVal.textContent = windowSlider.value;
+        });
+
+        document.getElementById('filter-modal-cancel').addEventListener('click', () => {
+            overlay.classList.remove('show');
+        });
+        document.getElementById('filter-modal-confirm').addEventListener('click', () => {
+            filterEnabled = toggle.checked;
             gradientThreshold = parseInt(thresholdSlider.value);
-            thresholdValue.textContent = gradientThreshold + '%';
+            smoothWindow = parseInt(windowSlider.value);
+            overlay.classList.remove('show');
             if (state.rawPoints.length > 0) updateWithFilter();
         });
 
-        windowSlider.addEventListener('input', () => {
-            smoothWindow = parseInt(windowSlider.value);
-            windowValue.textContent = smoothWindow;
-            if (state.rawPoints.length > 0) updateWithFilter();
+        document.getElementById('stat-elevation-card').addEventListener('click', () => {
+            toggle.checked = filterEnabled;
+            syncToggleUI();
+            thresholdSlider.value = gradientThreshold;
+            thresholdVal.textContent = gradientThreshold + '%';
+            windowSlider.value = smoothWindow;
+            windowVal.textContent = smoothWindow;
+            hint.textContent = filterEnabled
+                ? `已过滤 ${Math.round(state.totalElevationGain - calcStatsFromPoints(state.rawPoints).totalElevationGain)}m 无效爬升`
+                : '隧道/桥梁过滤已关闭，显示原始GPS数据';
+            overlay.classList.add('show');
         });
     }
 
@@ -1727,32 +1699,18 @@
     }
 
     function initDistanceMarkers() {
-        const existing = document.getElementById('distance-markers-toggle');
-        if (existing) return;
-        const filterControls = document.getElementById('filter-controls');
-        const row = document.createElement('div');
-        row.className = 'filter-row';
-        row.innerHTML = `
-            <label class="filter-toggle">
-                <input type="checkbox" id="distance-markers-toggle">
-                <span>距离标记</span>
-            </label>
-        `;
-        filterControls.appendChild(row);
-
-        document.getElementById('distance-markers-toggle').addEventListener('change', function() {
-            if (this.checked) addDistanceMarkers();
-            else removeDistanceMarkers();
-        });
-
         document.getElementById('stat-distance-card').addEventListener('click', async function() {
-            const current = state.markerInterval || 1;
-            const val = await showModal('设置距离标记间隔', current, '单位 km，可选 1、2、5、10');
+            const current = state.markerInterval || 0;
+            const val = await showModal('设置距离标记间隔', current, '单位 km，输入 0 关闭距离标记');
             if (val === null) return;
             const interval = parseInt(val);
-            if (isNaN(interval) || interval < 1 || interval > 50) { alert('请输入 1-50 之间的数值'); return; }
+            if (isNaN(interval) || interval < 0 || interval > 50) { alert('请输入 0-50 之间的数值'); return; }
             state.markerInterval = interval;
-            if (document.getElementById('distance-markers-toggle').checked) addDistanceMarkers();
+            if (interval === 0) {
+                removeDistanceMarkers();
+            } else {
+                addDistanceMarkers();
+            }
         });
     }
 
@@ -2191,6 +2149,29 @@
                 totalDistance: state.totalDistance,
                 totalElevationGain: state.totalElevationGain
             });
+        });
+
+        document.getElementById('stat-poi-card').addEventListener('click', () => {
+            const list = document.getElementById('poi-modal-list');
+            if (pois.length === 0) {
+                list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px 0;font-size:0.88em;">暂无兴趣点</div>';
+            } else {
+                list.innerHTML = pois.map((p, i) => {
+                    const info = POI_TYPES[p.type];
+                    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:8px;margin-bottom:6px;">
+                        <span style="font-size:1.3em;">${info.emoji}</span>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:0.88em;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</div>
+                            <div style="font-size:0.75em;color:var(--text-muted);">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</div>
+                        </div>
+                        <button onclick="document.getElementById('poi-modal-overlay').classList.remove('show');state.map.setView([${p.lat},${p.lng}],16);" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card);font-size:0.78em;cursor:pointer;white-space:nowrap;">定位</button>
+                    </div>`;
+                }).join('');
+            }
+            document.getElementById('poi-modal-overlay').classList.add('show');
+        });
+        document.getElementById('poi-modal-close').addEventListener('click', () => {
+            document.getElementById('poi-modal-overlay').classList.remove('show');
         });
     }
 
