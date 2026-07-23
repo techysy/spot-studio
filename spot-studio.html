@@ -1186,13 +1186,20 @@
                 waypoints.push({ lat, lng: lon, type, name });
             }
         });
+        const seen = new Set();
+        const uniqueWaypoints = waypoints.filter(w => {
+            const key = `${w.lat.toFixed(7)},${w.lng.toFixed(7)},${w.name}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
 
         return {
             points,
             totalDistance: totalDist,
             totalElevationGain: totalEleGain,
             duration,
-            waypoints
+            waypoints: uniqueWaypoints
         };
     }
 
