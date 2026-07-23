@@ -1358,7 +1358,19 @@
 
         downloadBtn.addEventListener('click', () => {
             if (!state.gpxData) return;
-            const blob = new Blob([state.gpxData], { type: 'application/gpx+xml' });
+            let gpx = state.gpxData;
+            if (pois.length > 0) {
+                const wpts = pois.map(p => {
+                    const info = POI_TYPES[p.type];
+                    return `  <wpt lat="${p.lat}" lon="${p.lng}">\n    <name>${p.name}</name>\n    <desc>${info.emoji} ${info.label}</desc>\n    <sym>${info.label}</sym>\n  </wpt>`;
+                }).join('\n');
+                if (gpx.includes('<trk>')) {
+                    gpx = gpx.replace('<trk>', wpts + '\n<trk>');
+                } else if (gpx.includes('<gpx')) {
+                    gpx = gpx.replace(/(<gpx[^>]*>)/, '$1\n' + wpts);
+                }
+            }
+            const blob = new Blob([gpx], { type: 'application/gpx+xml' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
