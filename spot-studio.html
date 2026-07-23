@@ -127,7 +127,7 @@
         }
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 14px;
         }
         .stat-card {
@@ -676,6 +676,11 @@
             <div class="stat-icon">⏱️</div>
             <span class="stat-value" id="stat-duration">--</span>
             <span class="stat-label" id="stat-duration-label">时长（<span id="speed-display">25</span>km/h）</span>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📍</div>
+            <span class="stat-value" id="stat-poi">0</span>
+            <span class="stat-label">兴趣点</span>
         </div>
     </div>
 </section>
@@ -1610,6 +1615,7 @@
     }
 
     function renderPoiList() {
+        document.getElementById('stat-poi').textContent = pois.length;
         const list = document.getElementById('poi-list');
         if (pois.length === 0) {
             list.innerHTML = '<div class="poi-empty">选择地图上方工具栏，点击地图添加</div>';
