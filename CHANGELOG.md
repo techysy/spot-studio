@@ -25,6 +25,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 上传 GPX 时自动从 `<metadata><link>` 提取 Strava / iGPSPORT / Garmin 链接
 - 自动填入对应输入框并激活按钮
 
+#### 🏷️ 活动类型识别
+- 自动识别 GPX `<type>` 元素（hiking/running/walking → 徒步模式）
+- 徒步模式下距离图标切换为 🥾，默认速度 5 km/h
+
 ### 🐛 修复
 - **过滤开关视觉状态**：开关 toggle 的 CSS specificity 冲突导致显示与实际状态不一致
 - **过滤提示数值**：修正 `原始值 - 过滤值` 计算顺序（之前写反导致显示负数）
