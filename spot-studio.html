@@ -662,7 +662,7 @@
 
 <section class="stats-section">
     <div class="stats-grid">
-        <div class="stat-card">
+        <div class="stat-card" id="stat-distance-card" style="cursor:pointer;" title="点击设置距离标记间隔">
             <div class="stat-icon">🚴</div>
             <span class="stat-value" id="stat-distance">--</span>
             <span class="stat-label">距离 (km)</span>
@@ -828,7 +828,8 @@
         addPointMode: false,
         deletePointMode: false,
         editHandleMarkers: [],
-        avgSpeed: 25
+        avgSpeed: 25,
+        markerInterval: 1
     };
 
     let filterEnabled = true;
@@ -1078,7 +1079,7 @@
         removeDistanceMarkers();
         if (!state.gpxPoints.length) return;
 
-        const intervalKm = parseInt(document.getElementById('distance-markers-interval').value) || 1;
+        const intervalKm = state.markerInterval || 1;
         let cumDist = 0;
         let nextMarker = intervalKm;
 
@@ -1736,14 +1737,6 @@
                 <input type="checkbox" id="distance-markers-toggle">
                 <span>距离标记</span>
             </label>
-            <div class="filter-slider-group">
-                <select id="distance-markers-interval" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:0.82em;background:var(--card);">
-                    <option value="1">每 1 km</option>
-                    <option value="2">每 2 km</option>
-                    <option value="5">每 5 km</option>
-                    <option value="10">每 10 km</option>
-                </select>
-            </div>
         `;
         filterControls.appendChild(row);
 
@@ -1751,7 +1744,14 @@
             if (this.checked) addDistanceMarkers();
             else removeDistanceMarkers();
         });
-        document.getElementById('distance-markers-interval').addEventListener('change', function() {
+
+        document.getElementById('stat-distance-card').addEventListener('click', async function() {
+            const current = state.markerInterval || 1;
+            const val = await showModal('设置距离标记间隔', current, '单位 km，可选 1、2、5、10');
+            if (val === null) return;
+            const interval = parseInt(val);
+            if (isNaN(interval) || interval < 1 || interval > 50) { alert('请输入 1-50 之间的数值'); return; }
+            state.markerInterval = interval;
             if (document.getElementById('distance-markers-toggle').checked) addDistanceMarkers();
         });
     }
