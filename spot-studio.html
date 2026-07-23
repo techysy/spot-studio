@@ -163,16 +163,6 @@
             margin-bottom: 14px;
             font-weight: 600;
         }
-        .description {
-            min-height: 80px;
-            outline: none;
-            line-height: 1.7;
-            color: var(--text);
-        }
-        .description:empty::before {
-            content: '点击编辑活动描述...';
-            color: var(--text-muted);
-        }
 
         .route-links { display: flex; flex-wrap: wrap; gap: 10px; }
         .route-link {
@@ -222,22 +212,6 @@
         .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
         .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
         .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        .social-links { display: flex; flex-wrap: wrap; gap: 10px; }
-        .social-link {
-            padding: 10px 16px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-size: 0.85em;
-            font-weight: 500;
-            color: #fff;
-            transition: all 0.2s;
-        }
-        .social-link:hover { transform: translateY(-1px); opacity: 0.9; }
-        .social-link.weibo { background: #E6162D; }
-        .social-link.wechat { background: #07C160; }
-        .social-link.twitter { background: #1DA1F2; }
-        .social-link.copy-link { background: var(--text-secondary); }
 
         .gpx-info {
             margin-top: 12px;
@@ -520,7 +494,9 @@
         .modal-btn-confirm { background: var(--accent); color: #fff; }
         .modal-btn-confirm:hover { background: var(--accent-light); }
 
+        #filter-modal-toggle + span:first-of-type { background: #ccc; }
         #filter-modal-toggle:checked + span:first-of-type { background: var(--accent); }
+        #filter-modal-toggle ~ #filter-modal-dot { left: 2px; }
         #filter-modal-toggle:checked ~ #filter-modal-dot { left: 22px; }
         #filter-modal-toggle:focus + span:first-of-type { box-shadow: 0 0 0 2px rgba(135,49,78,0.3); }
 
@@ -631,11 +607,6 @@
 
 <section class="details-section">
     <div class="detail-card">
-        <h3>📝 活动描述</h3>
-        <div class="description" contenteditable="true" id="description"></div>
-    </div>
-
-    <div class="detail-card">
         <h3>🗺️ 路书链接</h3>
         <div class="route-links" id="route-links">
             <a href="#" class="route-link strava" target="_blank" id="link-strava">
@@ -678,16 +649,6 @@
         <input type="file" id="gpx-input" accept=".gpx" hidden>
     </div>
 
-    <div class="detail-card">
-        <h3>🔗 分享</h3>
-        <div class="social-links">
-            <a href="#" class="social-link weibo" target="_blank" id="share-weibo">微博</a>
-            <a href="#" class="social-link wechat" target="_blank" id="share-wechat">微信</a>
-            <a href="#" class="social-link twitter" target="_blank" id="share-twitter">Twitter</a>
-            <a href="javascript:void(0)" class="social-link copy-link" id="share-copy">复制链接</a>
-        </div>
-    </div>
-
     <div class="detail-card poi-section">
         <h3>📍 兴趣点 (POI)</h3>
         <div class="poi-list" id="poi-list">
@@ -723,8 +684,8 @@
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
             <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
                 <input type="checkbox" id="filter-modal-toggle" style="opacity:0;width:0;height:0;" checked>
-                <span style="position:absolute;inset:0;background:#ccc;border-radius:12px;transition:0.3s;"></span>
-                <span id="filter-modal-dot" style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:0.3s;"></span>
+                <span style="position:absolute;inset:0;border-radius:12px;transition:0.3s;"></span>
+                <span id="filter-modal-dot" style="position:absolute;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:0.3s;"></span>
             </label>
             <span id="filter-modal-status" style="font-size:0.88em;font-weight:500;">已启用</span>
         </div>
@@ -1199,8 +1160,22 @@
             totalDistance: totalDist,
             totalElevationGain: totalEleGain,
             duration,
-            waypoints: uniqueWaypoints
+            waypoints: uniqueWaypoints,
+            links: parseGpxLinks(doc)
         };
+    }
+
+    function parseGpxLinks(doc) {
+        const links = {};
+        const allLinks = doc.querySelectorAll('metadata > link');
+        allLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (!href) return;
+            if (href.includes('strava.com')) links.strava = href;
+            else if (href.includes('igpsport.com')) links.igp = href;
+            else if (href.includes('garmin.com')) links.garmin = href;
+        });
+        return links;
     }
 
     function renderTrack(points) {
@@ -1378,6 +1353,16 @@
         updateWithFilter();
         updateTrackList();
 
+        if (result.links) {
+            const linkMap = { strava: 'input-strava', igp: 'input-igp', garmin: 'input-garmin' };
+            Object.keys(linkMap).forEach(key => {
+                if (result.links[key]) {
+                    document.getElementById(linkMap[key]).value = result.links[key];
+                    document.getElementById('link-' + key).href = result.links[key];
+                }
+            });
+        }
+
         if (result.waypoints && result.waypoints.length > 0) {
             result.waypoints.forEach(w => addPoi(w.lat, w.lng, w.type, w.name));
         }
@@ -1455,35 +1440,6 @@
             inputs[key].addEventListener('input', () => {
                 const url = inputs[key].value.trim();
                 if (url) links[key].href = url;
-            });
-        });
-    }
-
-    function initShare() {
-        document.getElementById('share-weibo').addEventListener('click', e => {
-            e.preventDefault();
-            const url = encodeURIComponent(location.href);
-            const title = encodeURIComponent(document.getElementById('title').textContent);
-            window.open(`https://service.weibo.com/share/share.php?url=${url}&title=${title}`, '_blank', 'width=600,height=400');
-        });
-
-        document.getElementById('share-wechat').addEventListener('click', e => {
-            e.preventDefault();
-            alert('请截图或复制链接分享到微信');
-        });
-
-        document.getElementById('share-twitter').addEventListener('click', e => {
-            e.preventDefault();
-            const url = encodeURIComponent(location.href);
-            const text = encodeURIComponent(document.getElementById('title').textContent);
-            window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank', 'width=600,height=400');
-        });
-
-        document.getElementById('share-copy').addEventListener('click', () => {
-            navigator.clipboard.writeText(location.href).then(() => {
-                const el = document.getElementById('share-copy');
-                el.textContent = '已复制';
-                setTimeout(() => el.textContent = '复制链接', 1500);
             });
         });
     }
@@ -2130,7 +2086,6 @@
         initLayerSwitcher();
         initUpload();
         initRouteLinks();
-        initShare();
         initFilterControls();
         initPoi();
         initColorMode();
