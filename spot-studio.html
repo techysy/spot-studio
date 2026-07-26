@@ -66,8 +66,36 @@
             font-weight: 400;
             min-height: 1.2em;
             outline: none;
+            max-height: 3.6em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            transition: max-height 0.3s ease;
+            position: relative;
+            padding: 0 24px 0 0;
+            word-break: break-all;
+        }
+        .hero-subtitle.expanded {
+            max-height: none;
+            -webkit-line-clamp: unset;
         }
         .hero-subtitle:empty { display: none; }
+        .hero-subtitle-toggle {
+            position: absolute;
+            right: 0;
+            bottom: -20px;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.78em;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+        .hero-subtitle-toggle:hover { color: rgba(255,255,255,0.8); }
 
         .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
 
@@ -188,36 +216,6 @@
             font-weight: 600;
         }
 
-        .route-links { display: flex; flex-wrap: wrap; gap: 10px; }
-        .route-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 18px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-size: 0.9em;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid var(--border);
-            color: var(--text);
-        }
-        .route-link:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
-        .route-link .icon {
-            width: 22px;
-            height: 22px;
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75em;
-            font-weight: 700;
-            color: #fff;
-        }
-        .route-link.strava .icon { background: #FC4C02; }
-        .route-link.igp .icon { background: #00AEEF; }
-        .route-link.garmin .icon { background: #000; }
-
         .gpx-actions { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn {
             padding: 10px 20px;
@@ -247,28 +245,6 @@
             display: none;
         }
         .gpx-info.show { display: block; }
-
-        .link-input-group { display: flex; flex-direction: column; gap: 10px; }
-        .link-input {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .link-input label {
-            font-size: 0.8em;
-            color: var(--text-secondary);
-            min-width: 70px;
-        }
-        .link-input input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 0.85em;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .link-input input:focus { border-color: var(--accent); }
 
         .upload-zone {
             border: 2px dashed var(--border);
@@ -303,7 +279,6 @@
         .speed-input input:focus { border-color: var(--accent); }
         .speed-input .unit { font-size: 0.8em; color: var(--text-muted); }
 
-        .poi-section { grid-column: 1 / -1; }
         .poi-map-toolbar {
             position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
             z-index: 1000; display: none;
@@ -641,39 +616,11 @@
         </div>
         <div class="gpx-actions">
             <button class="btn btn-primary" id="upload-btn">📤 上传 GPX</button>
-            <button class="btn btn-secondary" id="download-btn" disabled>⬇️ 下载 GPX</button>
+            <button class="btn btn-secondary" id="download-btn" disabled>⬇️ GPX</button>
+            <button class="btn btn-secondary" id="download-kmz-btn" disabled>⬇️ KMZ</button>
         </div>
         <div class="gpx-info" id="gpx-info"></div>
         <input type="file" id="gpx-input" accept=".gpx" hidden>
-    </div>
-
-    <div class="detail-card">
-        <h3>🗺️ 路书链接</h3>
-        <div class="route-links" id="route-links">
-            <a href="#" class="route-link strava" target="_blank" id="link-strava">
-                <span class="icon">S</span> Strava
-            </a>
-            <a href="#" class="route-link igp" target="_blank" id="link-igp">
-                <span class="icon">i</span> iGPSPORT
-            </a>
-            <a href="#" class="route-link garmin" target="_blank" id="link-garmin">
-                <span class="icon">G</span> Garmin Connect
-            </a>
-        </div>
-        <div class="link-input-group" style="margin-top: 14px;">
-            <div class="link-input">
-                <label>Strava</label>
-                <input type="url" id="input-strava" placeholder="https://www.strava.com/activities/...">
-            </div>
-            <div class="link-input">
-                <label>iGPSPORT</label>
-                <input type="url" id="input-igp" placeholder="粘贴 iGPSPORT 分享链接，如 https://share.igpsport.com/...">
-            </div>
-            <div class="link-input">
-                <label>Garmin</label>
-                <input type="url" id="input-garmin" placeholder="https://connect.garmin.com/...">
-            </div>
-        </div>
     </div>
 
     <div class="detail-card poi-section">
@@ -754,6 +701,7 @@ if (!window.L) {
     document.write('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>');
 }
 </script>
+<script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 (function() {
     const state = {
@@ -1253,7 +1201,6 @@ if (!window.L) {
             totalElevationGain: totalEleGain,
             duration,
             waypoints: uniqueWaypoints,
-            links: parseGpxLinks(doc),
             activityType: detectActivityType(doc),
             trackName: (doc.querySelector('metadata > name') || doc.querySelector('trk > name'))?.textContent?.trim() || '',
             trackDesc: doc.querySelector('trk > desc')?.textContent?.trim() || '',
@@ -1269,17 +1216,24 @@ if (!window.L) {
         return 'cycling';
     }
 
-    function parseGpxLinks(doc) {
-        const links = {};
-        const allLinks = doc.querySelectorAll('metadata > link');
-        allLinks.forEach(link => {
-            const href = link.getAttribute('href');
-            if (!href) return;
-            if (href.includes('strava.com')) links.strava = href;
-            else if (href.includes('igpsport.com')) links.igp = href;
-            else if (href.includes('garmin.com')) links.garmin = href;
-        });
-        return links;
+    function updateSubtitleToggle() {
+        const subtitle = document.getElementById('subtitle');
+        let toggle = subtitle.parentElement.querySelector('.hero-subtitle-toggle');
+        if (!toggle) {
+            toggle = document.createElement('button');
+            toggle.className = 'hero-subtitle-toggle';
+            subtitle.after(toggle);
+            toggle.addEventListener('click', () => {
+                subtitle.classList.toggle('expanded');
+                toggle.textContent = subtitle.classList.contains('expanded') ? '收起' : '展开';
+            });
+        }
+        const needsClamp = subtitle.scrollHeight > subtitle.clientHeight + 2;
+        toggle.style.display = needsClamp ? 'block' : 'none';
+        toggle.textContent = subtitle.classList.contains('expanded') ? '收起' : '展开';
+        if (!needsClamp && subtitle.classList.contains('expanded')) {
+            subtitle.classList.remove('expanded');
+        }
     }
 
     function renderTrack(points) {
@@ -1481,6 +1435,7 @@ if (!window.L) {
         const titleText = result.trackName || (fileName ? fileName.replace(/\.gpx$/i, '') : '');
         document.getElementById('title').textContent = titleText;
         document.getElementById('subtitle').textContent = result.trackDesc || '';
+        updateSubtitleToggle();
 
         document.getElementById('poi-map-toolbar').classList.add('show');
         document.getElementById('layer-switcher').classList.add('show');
@@ -1511,25 +1466,12 @@ if (!window.L) {
         updateWithFilter();
         updateTrackList();
 
-        if (result.links) {
-            const garminMatch = (fileName || '').match(/COURSE_(\d+)/i);
-            if (garminMatch && !result.links.garmin) {
-                result.links.garmin = `https://connectus.garmin.cn/app/course/${garminMatch[1]}`;
-            }
-            const linkMap = { strava: 'input-strava', igp: 'input-igp', garmin: 'input-garmin' };
-            Object.keys(linkMap).forEach(key => {
-                if (result.links[key]) {
-                    document.getElementById(linkMap[key]).value = result.links[key];
-                    document.getElementById('link-' + key).href = result.links[key];
-                }
-            });
-        }
-
         if (result.waypoints && result.waypoints.length > 0) {
             result.waypoints.forEach(w => addPoi(w.lat, w.lng, w.type, w.name));
         }
 
         document.getElementById('download-btn').disabled = false;
+        document.getElementById('download-kmz-btn').disabled = false;
         document.getElementById('map-hint').style.display = 'none';
     }
 
@@ -1580,9 +1522,8 @@ if (!window.L) {
                 s += `\n    </trkpt>`;
                 return s;
             }).join('\n');
-            const nameEl = new DOMParser().parseFromString(state.gpxData, 'text/xml').querySelector('metadata > name');
-            const trackName = nameEl ? nameEl.textContent : '';
-            let gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx creator="spot-studio" version="1.1"\n  xmlns="http://www.topografix.com/GPX/1/1"\n  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/11.xsd">\n  <metadata>\n    <name>${trackName}</name>\n  </metadata>\n  <trk>\n    <name>${trackName}</name>\n    <trkseg>\n${trkpts}\n    </trkseg>\n  </trk>\n</gpx>`;
+            const trackName = document.getElementById('title').textContent.trim();
+            let gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx creator="spot-studio" version="1.1"\n  xmlns="http://www.topografix.com/GPX/1/1"\n  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/11.xsd">\n  <metadata>\n    <name>${trackName}</name>\n    <author>\n      <name>spot-studio</name>\n    </author>\n    <link href="https://github.com/techysy/spot-studio">\n      <text>spot-studio</text>\n    </link>\n  </metadata>\n  <trk>\n    <name>${trackName}</name>\n    <trkseg>\n${trkpts}\n    </trkseg>\n  </trk>\n</gpx>`;
             if (pois.length > 0) {
                 const wpts = pois.map(p => {
                     const info = POI_TYPES[p.type];
@@ -1594,20 +1535,39 @@ if (!window.L) {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = state.fileName || 'route.gpx';
+            a.download = (trackName || 'route') + '.gpx';
             a.click();
             URL.revokeObjectURL(url);
         });
-    }
 
-    function initRouteLinks() {
-        const inputs = { strava: document.getElementById('input-strava'), igp: document.getElementById('input-igp'), garmin: document.getElementById('input-garmin') };
-        const links = { strava: document.getElementById('link-strava'), igp: document.getElementById('link-igp'), garmin: document.getElementById('link-garmin') };
+        const downloadKmzBtn = document.getElementById('download-kmz-btn');
+        downloadKmzBtn.addEventListener('click', () => {
+            if (!state.gpxData || state.rawPoints.length === 0 || !window.JSZip) return;
+            const trackName = document.getElementById('title').textContent.trim() || 'route';
+            const pts = state.rawPoints;
 
-        Object.keys(inputs).forEach(key => {
-            inputs[key].addEventListener('input', () => {
-                const url = inputs[key].value.trim();
-                if (url) links[key].href = url;
+            const coordinates = pts.map(p => `${p.lon.toFixed(7)},${p.lat.toFixed(7)},${p.ele.toFixed(1)}`).join('\n          ');
+
+            let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n  <Document>\n    <name>${trackName}</name>\n    <author>spot-studio</author>\n    <Style id="trackStyle">\n      <LineStyle>\n        <color>ff4e3c8e</color>\n        <width>3</width>\n      </LineStyle>\n    </Style>\n    <Placemark>\n      <name>${trackName}</name>\n      <styleUrl>#trackStyle</styleUrl>\n      <LineString>\n        <tessellate>1</tessellate>\n        <coordinates>\n          ${coordinates}\n        </coordinates>\n      </LineString>\n    </Placemark>`;
+
+            if (pois.length > 0) {
+                pois.forEach(p => {
+                    const info = POI_TYPES[p.type];
+                    kml += `\n    <Placemark>\n      <name>${p.name}</name>\n      <description>${info.emoji} ${info.label}</description>\n      <Point>\n        <coordinates>${p.lng},${p.lat},0</coordinates>\n      </Point>\n    </Placemark>`;
+                });
+            }
+
+            kml += `\n  </Document>\n</kml>`;
+
+            const zip = new JSZip();
+            zip.file('doc.kml', kml);
+            zip.generateAsync({ type: 'blob' }).then(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = trackName + '.kmz';
+                a.click();
+                URL.revokeObjectURL(url);
             });
         });
     }
@@ -1686,26 +1646,35 @@ if (!window.L) {
 
     function snapToTrack(lat, lng) {
         if (!state.gpxPoints.length) return { lat, lng };
+        const SNAP_MAX = 50;
         let minDist = Infinity;
         let snapped = { lat, lng };
         for (const pt of state.gpxPoints) {
             const d = haversine({ lat, lon: lng }, { lat: pt.lat, lon: pt.lon });
             if (d < minDist) { minDist = d; snapped = { lat: pt.lat, lng: pt.lon }; }
         }
-        return snapped;
+        return minDist <= SNAP_MAX ? snapped : { lat, lng };
     }
 
     function addPoi(lat, lng, type, name) {
         const info = POI_TYPES[type];
         const snapped = snapToTrack(lat, lng);
+        const poiName = name || info.label;
+
+        const duplicate = pois.find(p =>
+            p.type === type && p.name === poiName &&
+            haversine({ lat, lon: lng }, { lat: p.lat, lon: p.lng }) < 5
+        );
+        if (duplicate) return false;
+
         const dist = haversine({ lat, lon: lng }, { lat: snapped.lat, lon: snapped.lng });
         const marker = L.marker([snapped.lat, snapped.lng], { icon: createPoiIcon(type) }).addTo(state.map);
-        const poiName = name || info.label;
         const snapText = dist > 1 ? ` (吸附 ${Math.round(dist)}m)` : '';
         marker.bindPopup(`<b>${info.emoji} ${poiName}</b>${snapText}`);
         const poi = { lat: snapped.lat, lng: snapped.lng, type, name: poiName, marker };
         pois.push(poi);
         renderPoiList();
+        return true;
     }
 
     function removePoi(idx) {
@@ -1743,7 +1712,7 @@ if (!window.L) {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'pois.json';
+        a.download = (document.getElementById('title').textContent.trim() || 'pois') + '.json';
         a.click();
         URL.revokeObjectURL(url);
     }
@@ -2265,7 +2234,6 @@ if (!window.L) {
         initMap();
         initLayerSwitcher();
         initUpload();
-        initRouteLinks();
         initFilterControls();
         initPoi();
         initColorMode();
@@ -2276,6 +2244,10 @@ if (!window.L) {
         initEditorToolbar();
         initElevationInteraction();
         updateUndoRedoButtons();
+
+        const subtitleEl = document.getElementById('subtitle');
+        new MutationObserver(() => updateSubtitleToggle()).observe(subtitleEl, { childList: true, characterData: true, subtree: true });
+        window.addEventListener('resize', () => updateSubtitleToggle());
 
         document.getElementById('ele-calibrate-btn').addEventListener('click', async () => {
             if (state.rawPoints.length === 0) return;
