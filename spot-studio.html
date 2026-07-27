@@ -31,113 +31,135 @@
             min-height: 100vh;
         }
 
-        .hero {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-            padding: 48px 24px 40px;
-            text-align: center;
-            color: #fff;
+        .navbar {
+            background: var(--card);
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
             position: relative;
-            overflow: hidden;
+            z-index: 100;
         }
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at 30% 70%, rgba(255,255,255,0.08) 0%, transparent 50%);
+        .navbar-inner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
         }
-        .hero-title {
-            font-size: 2.4em;
+        .navbar-title {
+            font-size: 1em;
             font-weight: 700;
-            margin-bottom: 8px;
-            position: relative;
-            outline: none;
-            min-height: 1.2em;
-        }
-        .hero-title:empty::before {
-            content: '点击输入骑行活动标题';
-            opacity: 0.5;
-        }
-        .hero-subtitle {
-            font-size: 0.95em;
-            color: rgba(255,255,255,0.6);
-            font-weight: 400;
-            min-height: 1.2em;
-            outline: none;
-            max-height: 3.6em;
+            color: var(--accent);
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            transition: max-height 0.3s ease;
-            position: relative;
-            padding: 0 24px 0 0;
-            word-break: break-all;
+            outline: none;
+            min-width: 0;
+            flex-shrink: 1;
+            min-height: 1.2em;
         }
-        .hero-subtitle.expanded {
-            max-height: none;
-            -webkit-line-clamp: unset;
+        .navbar-title:empty::before {
+            content: 'spot-studio';
+            opacity: 0.4;
         }
-        .hero-subtitle:empty { display: none; }
-        .hero-subtitle-toggle {
-            position: absolute;
-            right: 0;
-            bottom: -20px;
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.5);
-            font-size: 0.78em;
+        .navbar-divider {
+            width: 1px;
+            height: 20px;
+            background: var(--border);
+            flex-shrink: 0;
+            display: none;
+        }
+        .navbar-subtitle {
+            font-size: 0.82em;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            outline: none;
+            min-height: 1.2em;
+            flex-shrink: 1;
+            max-width: 300px;
+        }
+        .navbar-subtitle:empty { display: none; }
+        .navbar-spacer { flex: 1; }
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .navbar-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            font-size: 0.8em;
+            font-weight: 500;
             cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 4px;
-            transition: color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            white-space: nowrap;
         }
-        .hero-subtitle-toggle:hover { color: rgba(255,255,255,0.8); }
+        .navbar-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .navbar-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .navbar-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .navbar-btn.primary:hover { background: var(--accent-light); }
 
         .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
 
-        .map-section {
-            margin: -20px auto 0;
-            max-width: 1100px;
-            padding: 0 20px;
+        .map-area {
             position: relative;
-            z-index: 10;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #e8e8e8;
         }
         #map {
             width: 100%;
-            height: 70vh;
-            min-height: 450px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
+            height: calc(100vh - 48px - 440px);
+            min-height: 250px;
             background: #e8e8e8;
         }
         .map-hint {
-            text-align: center;
-            padding: 12px;
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 500;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(6px);
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             color: var(--text-secondary);
-            font-size: 0.9em;
+            font-size: 0.85em;
+            pointer-events: none;
         }
 
-        .elevation-section {
+        .content-area {
             max-width: 1100px;
-            margin: 16px auto 0;
-            padding: 0 20px;
+            margin: 0 auto;
+            padding: 16px 20px 40px;
         }
         .elevation-card {
             background: var(--card);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            padding: 20px;
+            padding: 16px 20px;
             display: none;
+            margin-bottom: 14px;
         }
         .elevation-card.show { display: block; }
         .elevation-title {
-            font-size: 0.85em;
+            font-size: 0.82em;
             color: var(--text-secondary);
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             font-weight: 500;
             display: flex;
             align-items: center;
@@ -148,7 +170,7 @@
             background: none;
             border: 1px solid var(--border);
             color: var(--text-secondary);
-            font-size: 0.85em;
+            font-size: 0.82em;
             padding: 3px 10px;
             border-radius: 6px;
             cursor: pointer;
@@ -172,47 +194,40 @@
             display: block;
         }
 
-        .stats-section {
-            max-width: 1100px;
-            margin: 20px auto 0;
-            padding: 0 20px;
-        }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
+            gap: 12px;
+            margin-bottom: 14px;
         }
         .stat-card {
             background: var(--card);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            padding: 22px 16px;
+            padding: 16px 12px;
             text-align: center;
             transition: transform 0.2s, box-shadow 0.2s;
         }
         .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
-        .stat-icon { font-size: 1.6em; margin-bottom: 8px; }
-        .stat-value { font-size: 1.8em; font-weight: 700; color: var(--accent); display: block; line-height: 1.2; }
-        .stat-label { font-size: 0.8em; color: var(--text-secondary); margin-top: 4px; display: block; }
+        .stat-icon { font-size: 1.4em; margin-bottom: 6px; }
+        .stat-value { font-size: 1.5em; font-weight: 700; color: var(--accent); display: block; line-height: 1.2; }
+        .stat-label { font-size: 0.78em; color: var(--text-secondary); margin-top: 4px; display: block; }
 
-        .details-section {
-            max-width: 1100px;
-            margin: 24px auto 0;
-            padding: 0 20px 60px;
+        .details-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 14px;
         }
         .detail-card {
             background: var(--card);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            padding: 24px;
+            padding: 20px;
         }
         .detail-card h3 {
-            font-size: 0.95em;
+            font-size: 0.9em;
             color: var(--text-secondary);
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             font-weight: 600;
         }
 
@@ -310,24 +325,75 @@
             border-radius: 7px; display: flex; align-items: center; justify-content: center;
             font-weight: 700; padding: 0 3px;
         }
-        .layer-dropdown {
+        .map-color-bar {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            z-index: 1000; display: none;
+            gap: 6px; padding: 6px 10px;
+            background: rgba(255,255,255,0.95); border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15); backdrop-filter: blur(8px);
+        }
+        .map-color-bar.show { display: flex; }
+        .map-right-controls {
+            position: absolute; top: 12px; right: 12px;
+            z-index: 1000; display: none;
+            flex-direction: column; gap: 8px;
+        }
+        .map-ctrl-btn {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: rgba(255,255,255,0.95); border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #333; transition: all 0.2s;
+            backdrop-filter: blur(6px);
+        }
+        .map-ctrl-btn:hover { background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.18); }
+        .map-ctrl-btn.active { color: var(--accent); }
+        .map-ctrl-sep { height: 1px; background: rgba(0,0,0,0.08); margin: 2px 6px; }
+        .map-right-controls .layer-dropdown {
             position: absolute; top: 100%; right: 0; margin-top: 6px;
-            background: rgba(255,255,255,0.97); border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.18); padding: 4px 0;
-            display: none; min-width: 150px; backdrop-filter: blur(8px);
+            background: rgba(255,255,255,0.97); border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.18); padding: 8px 0;
+            display: none; min-width: 200px; max-height: 70vh;
+            overflow-y: auto; backdrop-filter: blur(8px);
         }
         .layer-dropdown.show { display: block; }
-        .layer-option {
-            display: flex; align-items: center; gap: 8px; padding: 7px 14px;
+        .ld-section { padding: 0 4px; }
+        .ld-section-title {
+            font-size: 0.78em; font-weight: 600; color: var(--text-muted);
+            padding: 6px 12px 4px; user-select: none;
+        }
+        .ld-divider { height: 1px; background: var(--border); margin: 6px 12px; }
+        .ld-item {
+            display: flex; align-items: center; gap: 8px; padding: 6px 12px;
             font-size: 0.82em; cursor: pointer; color: var(--text-secondary);
-            transition: background 0.15s; border: none; background: none; width: 100%; text-align: left;
+            transition: background 0.15s; user-select: none;
         }
-        .layer-option:hover { background: var(--bg); }
-        .layer-option.active { color: var(--accent); font-weight: 600; }
-        .layer-option .layer-dot {
-            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        .ld-item:hover { background: var(--bg); }
+        .ld-item input { display: none; }
+        .ld-radio-visual, .ld-check-visual {
+            width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+            border: 2px solid #ccc; transition: all 0.15s;
+            display: flex; align-items: center; justify-content: center;
         }
-        .color-legend {
+        .ld-check-visual { border-radius: 4px; }
+        .ld-item input:checked ~ .ld-radio-visual {
+            border-color: var(--accent);
+        }
+        .ld-item input:checked ~ .ld-radio-visual::after {
+            content: ''; width: 8px; height: 8px; border-radius: 50%;
+            background: var(--accent);
+        }
+        .ld-item input:checked ~ .ld-check-visual {
+            border-color: var(--accent); background: var(--accent);
+        }
+        .ld-item input:checked ~ .ld-check-visual::after {
+            content: ''; width: 8px; height: 5px; border-left: 2px solid #fff;
+            border-bottom: 2px solid #fff; transform: rotate(-45deg) translateY(-1px);
+        }
+        .osm-poi-import-btn:hover {
+            background: var(--accent) !important; color: #fff !important;
+            border-color: var(--accent) !important;
+        }
         .poi-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
         .poi-item {
             display: flex; align-items: center; gap: 8px; padding: 8px 10px;
@@ -346,35 +412,32 @@
         .poi-actions { display: flex; gap: 8px; margin-top: 10px; }
         .poi-actions .btn { font-size: 0.78em; padding: 6px 12px; }
 
-        .footer {
-            text-align: center;
-            padding: 24px;
-            color: var(--text-muted);
-            font-size: 0.8em;
-        }
-
-        .leaflet-control-zoom a {
-            border-radius: 8px !important;
-        }
+        .footer { display: none; }
 
         .color-legend {
-            position: absolute; bottom: 52px; right: 12px; z-index: 1000;
+            position: absolute; bottom: 40px; right: 12px; z-index: 1000;
             background: rgba(255,255,255,0.95); border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.12); padding: 10px 12px;
-            display: none; min-width: 140px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12); padding: 8px 14px;
+            display: none; min-width: 160px;
         }
         .color-legend.show { display: block; }
-        .color-legend-title { font-size: 0.75em; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600; }
         .color-legend-bar {
-            height: 12px; border-radius: 3px; margin-bottom: 4px;
-            background: linear-gradient(to right, hsl(240,70%,50%), hsl(180,70%,50%), hsl(120,70%,50%), hsl(60,70%,50%), hsl(0,70%,50%));
+            height: 12px; border-radius: 3px; margin-bottom: 6px;
+            background: linear-gradient(to right,
+                hsl(240,70%,50%), hsl(230,70%,50%), hsl(220,70%,50%), hsl(210,70%,50%),
+                hsl(200,70%,50%), hsl(190,70%,50%), hsl(180,70%,50%), hsl(170,70%,50%),
+                hsl(160,70%,50%), hsl(150,70%,50%), hsl(140,70%,50%), hsl(130,70%,50%),
+                hsl(120,70%,50%), hsl(110,70%,50%), hsl(100,70%,50%), hsl(90,70%,50%),
+                hsl(80,70%,50%), hsl(70,70%,50%), hsl(60,70%,50%), hsl(50,70%,50%),
+                hsl(40,70%,50%), hsl(30,70%,50%), hsl(20,70%,50%), hsl(10,70%,50%),
+                hsl(0,70%,50%));
         }
-        .color-legend-labels { display: flex; justify-content: space-between; font-size: 0.7em; color: var(--text-muted); }
+        .color-legend-labels { display: flex; justify-content: space-between; font-size: 0.7em; color: var(--text-muted); gap: 12px; }
 
         .distance-markers { display: none; }
 
         .measure-result {
-            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: 56px; left: 50%; transform: translateX(-50%);
             z-index: 1001; background: rgba(0,0,0,0.8); color: #fff;
             padding: 8px 16px; border-radius: 8px; font-size: 0.85em;
             display: none; pointer-events: none; white-space: nowrap;
@@ -382,7 +445,7 @@
         .measure-result.show { display: block; }
 
         .context-menu {
-            position: absolute; z-index: 2000;
+            position: fixed; z-index: 2000;
             background: var(--card); border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.18); padding: 6px 0;
             min-width: 160px; display: none;
@@ -423,13 +486,16 @@
         }
         .track-item-del:hover { opacity: 1; }
 
+
         .coords-display {
-            position: absolute; bottom: 12px; left: 12px; z-index: 1000;
+            position: absolute; bottom: 40px; left: 12px; z-index: 1000;
             background: rgba(0,0,0,0.7); color: #fff;
             padding: 4px 10px; border-radius: 6px; font-size: 0.72em;
             font-family: 'SF Mono', 'Menlo', monospace; display: none;
+            white-space: nowrap;
         }
         .coords-display.show { display: block; }
+        .color-legend { flex: 1; justify-content: flex-end; }
 
         .modal-overlay {
             position: fixed; inset: 0; z-index: 9999;
@@ -474,23 +540,32 @@
         #filter-modal-toggle:focus + span:first-of-type { box-shadow: 0 0 0 2px rgba(135,49,78,0.3); }
 
         @media (max-width: 768px) {
-            .hero { padding: 36px 16px 32px; }
-            .hero-title { font-size: 1.6em; }
+            .navbar { padding: 0 10px; }
+            .navbar-subtitle { display: none; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .details-section { grid-template-columns: 1fr; }
-            #map { height: 60vh; min-height: 350px; }
-            .stat-value { font-size: 1.4em; }
+            .details-grid { grid-template-columns: 1fr; }
+            #map { height: calc(100vh - 48px - 400px); min-height: 250px; }
+            .stat-value { font-size: 1.3em; }
         }
     </style>
 </head>
 <body>
 
-<header class="hero">
-    <div class="hero-title" contenteditable="true" id="title"></div>
-    <div class="hero-subtitle" contenteditable="true" id="subtitle"></div>
-</header>
+<nav class="navbar">
+    <div class="navbar-inner">
+        <div class="navbar-title" contenteditable="true" id="title"></div>
+        <div class="navbar-divider" id="navbar-divider"></div>
+        <div class="navbar-subtitle" contenteditable="true" id="subtitle"></div>
+        <div class="navbar-spacer"></div>
+        <div class="navbar-actions">
+            <button class="navbar-btn primary" id="upload-btn">📤 上传</button>
+            <button class="navbar-btn" id="download-btn" disabled>⬇️ GPX</button>
+            <button class="navbar-btn" id="download-kmz-btn" disabled>⬇️ KMZ</button>
+        </div>
+    </div>
+</nav>
 
-<section class="map-section">
+<section class="map-area">
     <div id="map"></div>
     <div class="poi-map-toolbar" id="poi-map-toolbar">
         <div class="poi-map-toolbar-inner">
@@ -498,8 +573,6 @@
                 <button class="map-tool-btn" id="tool-undo" title="↩ 撤销">↩</button>
                 <button class="map-tool-btn" id="tool-redo" title="↪ 重做">↪</button>
                 <button class="map-tool-btn" id="tool-measure" title="📏 测距">📏</button>
-                <button class="map-tool-btn" id="tool-addpoint" title="➕ 添加节点">➕</button>
-                <button class="map-tool-btn" id="tool-deletepoint" title="🗑️ 删除节点">🗑️</button>
             </div>
             <div class="map-toolbar-sep"></div>
             <div class="map-toolbar-group" id="poi-group">
@@ -510,61 +583,68 @@
                 <button class="map-tool-btn" data-type="water" title="💧 饮水">💧</button>
                 <button class="map-tool-btn" data-type="danger" title="⚠️ 注意">⚠️</button>
             </div>
-            <div class="map-toolbar-sep"></div>
-            <div class="map-toolbar-group" id="osm-poi-group">
-                <button class="map-tool-btn" id="osm-poi-toggle" title="🌐 OSM 兴趣点">🏪</button>
-            </div>
-            <div class="map-toolbar-sep"></div>
-            <div class="map-toolbar-group" id="color-group">
-                <button class="map-tool-btn color-mode-btn active" data-mode="none" title="着色：无">🎨</button>
-                <button class="map-tool-btn color-mode-btn" data-mode="elevation" title="着色：海拔">⛰️</button>
-                <button class="map-tool-btn color-mode-btn" data-mode="slope" title="着色：坡度">📐</button>
-            </div>
-            <div class="map-toolbar-sep"></div>
-            <div class="map-toolbar-group" id="layer-group" style="position:relative;">
-                <button class="map-tool-btn" id="layer-toggle" title="🗺️ 切换图层">🗺️</button>
-                <div class="layer-dropdown" id="layer-dropdown">
-                    <button class="layer-option active" data-layer="street"><span class="layer-dot" style="background:#e8e4df;"></span>🗺️ 街道</button>
-                    <button class="layer-option" data-layer="osm"><span class="layer-dot" style="background:#4caf50;"></span>🌐 OpenStreetMap</button>
-                    <button class="layer-option" data-layer="satellite"><span class="layer-dot" style="background:#2196f3;"></span>🛰️ 卫星</button>
+        </div>
+    </div>
+    <div class="map-color-bar" id="map-color-bar">
+        <button class="map-tool-btn color-mode-btn active" data-mode="none" title="着色：无">🎨</button>
+        <button class="map-tool-btn color-mode-btn" data-mode="elevation" title="着色：海拔">⛰️</button>
+        <button class="map-tool-btn color-mode-btn" data-mode="slope" title="着色：坡度">📐</button>
+    </div>
+    <div class="map-right-controls" id="map-right-controls">
+        <button class="map-ctrl-btn" id="map-locate" title="我的位置">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+        </button>
+        <button class="map-ctrl-btn" id="map-zoom-in" title="放大">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button class="map-ctrl-btn" id="map-zoom-out" title="缩小">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <div class="map-ctrl-sep"></div>
+        <div class="map-ctrl-btn" id="layer-toggle" title="图层" style="position:relative;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            <div class="layer-dropdown" id="layer-dropdown">
+                <div class="ld-section">
+                    <div class="ld-section-title">底图</div>
+                    <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="osm" checked><span class="ld-radio-visual"></span>OpenStreetMap</label>
+                    <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="opentopo"><span class="ld-radio-visual"></span>OpenTopoMap</label>
+                    <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="satellite"><span class="ld-radio-visual"></span>卫星 (Esri)</label>
+                </div>
+                <div class="ld-divider"></div>
+                <div class="ld-section">
+                    <div class="ld-section-title">兴趣点 (OSM)</div>
+                    <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="toilets"><span class="ld-check-visual"></span>🚻 厕所</label>
+                    <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="shops"><span class="ld-check-visual"></span>🏪 商店</label>
+                    <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="food"><span class="ld-check-visual"></span>🍜 餐饮</label>
+                    <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="water"><span class="ld-check-visual"></span>💧 饮水</label>
+                    <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="fuel"><span class="ld-check-visual"></span>⛽ 加油站</label>
+                    <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="lodging"><span class="ld-check-visual"></span>🏨 住宿</label>
+                    <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="medical"><span class="ld-check-visual"></span>🏥 医疗</label>
+                    <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="sights"><span class="ld-check-visual"></span>⛰️ 风景点</label>
                 </div>
             </div>
         </div>
     </div>
+    <div class="measure-result" id="measure-result"></div>
     <div class="color-legend" id="color-legend">
-        <div class="color-legend-title" id="color-legend-title">海拔</div>
         <div class="color-legend-bar" id="color-legend-bar"></div>
         <div class="color-legend-labels">
             <span id="color-legend-min">0m</span>
             <span id="color-legend-max">1000m</span>
         </div>
     </div>
-    <div class="measure-result" id="measure-result"></div>
     <div class="coords-display" id="coords-display">0.000000, 0.000000</div>
-    <div class="context-menu" id="context-menu">
-        <div class="context-menu-item" data-action="mark">📍 放置标记</div>
-        <div class="context-menu-item" data-action="measure-here">📏 从这里测距</div>
-        <div class="context-menu-divider"></div>
-        <div class="context-menu-item" data-action="copy-coords">📋 复制坐标</div>
-        <div class="context-menu-item" data-action="center-map">🎯 居中地图</div>
-    </div>
     <div class="map-hint" id="map-hint">上传 GPX / KML / KMZ 文件或拖拽到页面以显示轨迹</div>
 </section>
+<div class="context-menu" id="context-menu">
+    <div class="context-menu-item" data-action="mark">📍 放置标记</div>
+    <div class="context-menu-item" data-action="measure-here">📏 从这里测距</div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item" data-action="copy-coords">📋 复制坐标</div>
+    <div class="context-menu-item" data-action="center-map">🎯 居中地图</div>
+</div>
 
-<section class="elevation-section">
-    <div class="elevation-card" id="elevation-card">
-        <div class="elevation-title">
-            海拔剖面 (Elevation Profile)
-            <div class="elevation-btns">
-                <button class="ele-calibrate-btn" id="ele-calibrate-btn" title="校准海拔：查询 DEM 补全缺失的海拔数据">🔄 校准海拔</button>
-                <button class="ele-calibrate-btn" id="gcj02-toggle" title="坐标偏移校正：佳明等国内设备可能使用 GCJ-02 坐标系">📐 偏移校正</button>
-            </div>
-        </div>
-        <canvas id="elevation-chart"></canvas>
-    </div>
-</section>
-
-<section class="stats-section">
+<div class="content-area">
     <div class="stats-grid">
         <div class="stat-card" id="stat-distance-card" style="cursor:pointer;" title="点击设置距离标记间隔">
             <div class="stat-icon">🚴</div>
@@ -587,40 +667,48 @@
             <span class="stat-label">兴趣点</span>
         </div>
     </div>
-</section>
 
-<section class="details-section">
-    <div class="detail-card">
-        <h3>📂 GPX 文件</h3>
-        <div class="upload-zone" id="upload-zone">
-            <div class="upload-zone-icon">📁</div>
-            <div class="upload-zone-text">点击选择或拖拽 GPX / KML / KMZ 文件到此处</div>
+    <div class="elevation-card" id="elevation-card">
+        <div class="elevation-title">
+            海拔剖面
+            <div class="elevation-btns">
+                <button class="ele-calibrate-btn" id="ele-calibrate-btn" title="校准海拔：查询 DEM 补全缺失的海拔数据">🔄 校准海拔</button>
+                <button class="ele-calibrate-btn" id="gcj02-toggle" title="坐标偏移校正：佳明等国内设备可能使用 GCJ-02 坐标系">📐 偏移校正</button>
+            </div>
         </div>
-        <div class="gpx-actions">
-            <button class="btn btn-primary" id="upload-btn">📤 上传 GPX</button>
-            <button class="btn btn-secondary" id="download-btn" disabled>⬇️ GPX</button>
-            <button class="btn btn-secondary" id="download-kmz-btn" disabled>⬇️ KMZ</button>
-        </div>
-        <div class="gpx-info" id="gpx-info"></div>
-        <input type="file" id="gpx-input" accept=".gpx,.kml,.kmz" hidden>
+        <canvas id="elevation-chart"></canvas>
     </div>
 
-    <div class="detail-card poi-section">
-        <h3>📍 兴趣点 (POI)</h3>
-        <div class="poi-list" id="poi-list">
-            <div class="poi-empty">选择地图上方工具栏，点击地图添加</div>
+    <div class="details-grid">
+        <div class="detail-card">
+            <h3>📂 GPX 文件</h3>
+            <div class="upload-zone" id="upload-zone">
+                <div class="upload-zone-icon">📁</div>
+                <div class="upload-zone-text">点击选择或拖拽 GPX / KML / KMZ 文件到此处</div>
+            </div>
+            <div class="gpx-actions">
+                <button class="btn btn-primary" id="upload-btn-card">📤 上传 GPX</button>
+                <button class="btn btn-secondary" id="download-btn-card" disabled>⬇️ GPX</button>
+                <button class="btn btn-secondary" id="download-kmz-btn-card" disabled>⬇️ KMZ</button>
+            </div>
+            <div class="gpx-info" id="gpx-info"></div>
+            <input type="file" id="gpx-input" accept=".gpx,.kml,.kmz" hidden>
         </div>
-        <div class="poi-actions">
-            <button class="btn btn-secondary" id="poi-export">📤 导出 JSON</button>
-            <button class="btn btn-secondary" id="poi-import-btn">📥 导入 JSON</button>
-            <input type="file" id="poi-import-input" accept=".json" hidden>
+
+        <div class="detail-card poi-section">
+            <h3>📍 兴趣点 (POI)</h3>
+            <div class="poi-list" id="poi-list">
+                <div class="poi-empty">选择地图上方工具栏，点击地图添加</div>
+            </div>
+            <div class="poi-actions">
+                <button class="btn btn-secondary" id="poi-export">📤 导出 JSON</button>
+                <button class="btn btn-secondary" id="poi-import-btn">📥 导入 JSON</button>
+                <button class="btn btn-secondary" id="poi-clear-all" style="color:var(--accent);border-color:var(--accent);">🗑 清空</button>
+                <input type="file" id="poi-import-input" accept=".json" hidden>
+            </div>
         </div>
     </div>
-</section>
-
-<footer class="footer">
-    <p>© 2024 shiyangyu.com · spot-studio</p>
-</footer>
+</div>
 
 <div class="modal-overlay" id="modal-overlay">
     <div class="modal-box">
@@ -757,14 +845,14 @@ if (!window.L) {
 
     function initMap() {
         state.map = L.map('map', {
-            zoomControl: true,
+            zoomControl: false,
             scrollWheelZoom: true
         }).setView([30.5728, 104.0668], 12);
 
         state.layers = {
-            street: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-                maxZoom: 19
+            opentopo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://opentopomap.org">OpenTopoMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+                maxZoom: 17
             }),
             osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -776,8 +864,8 @@ if (!window.L) {
             })
         };
 
-        state.currentLayer = 'street';
-        state.layers.street.addTo(state.map);
+        state.currentLayer = 'osm';
+        state.layers.osm.addTo(state.map);
 
         setTimeout(() => state.map.invalidateSize(), 100);
     }
@@ -789,18 +877,43 @@ if (!window.L) {
             e.stopPropagation();
             dropdown.classList.toggle('show');
         });
-        document.addEventListener('click', () => dropdown.classList.remove('show'));
-        dropdown.addEventListener('click', e => {
-            const btn = e.target.closest('.layer-option');
-            if (!btn) return;
-            const layer = btn.dataset.layer;
-            if (layer === state.currentLayer) return;
-            state.map.removeLayer(state.layers[state.currentLayer]);
-            state.layers[layer].addTo(state.map);
-            state.currentLayer = layer;
-            dropdown.querySelectorAll('.layer-option').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            dropdown.classList.remove('show');
+        document.addEventListener('click', e => {
+            if (!dropdown.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        dropdown.querySelectorAll('input[name="base-layer"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                const layer = radio.value;
+                if (layer === state.currentLayer) return;
+                state.map.removeLayer(state.layers[state.currentLayer]);
+                state.layers[layer].addTo(state.map);
+                state.currentLayer = layer;
+            });
+        });
+
+        const osmQueries = {
+            toilets: 'amenity~"toilets|restroom"',
+            shops: 'shop~"convenience|supermarket|kiosk"',
+            food: 'amenity~"restaurant|cafe|fast_food|food_court"',
+            water: 'amenity~"drinking_water"',
+            fuel: 'amenity~"fuel"',
+            lodging: 'tourism~"hotel|hostel|camp_site|guesthouse"',
+            medical: 'amenity~"hospital|clinic|pharmacy|doctors"',
+            sights: 'tourism~"viewpoint|attraction|information"'
+        };
+        const osmIcons = { toilets:'🚻', shops:'🏪', food:'🍜', water:'💧', fuel:'⛽', lodging:'🏨', medical:'🏥', sights:'⛰️' };
+
+        dropdown.querySelectorAll('.osm-poi-cb').forEach(cb => {
+            cb.addEventListener('change', async () => {
+                const cat = cb.dataset.cat;
+                if (cb.checked) {
+                    await fetchAndShowOsmPois(cat, osmQueries[cat], osmIcons[cat]);
+                } else {
+                    clearOsmPoisByCat(cat);
+                }
+            });
         });
     }
 
@@ -808,7 +921,7 @@ if (!window.L) {
         const R = 6371000;
         const toRad = d => d * Math.PI / 180;
         const dLat = toRad(p2.lat - p1.lat);
-        const dLon = toRad(p2.lon - p1.lon);
+        const dLon = toRad((p2.lon ?? p2.lng) - (p1.lon ?? p1.lng));
         const a = Math.sin(dLat/2)**2 + Math.cos(toRad(p1.lat)) * Math.cos(toRad(p2.lat)) * Math.sin(dLon/2)**2;
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
@@ -916,8 +1029,15 @@ if (!window.L) {
     }
 
     function getSlopeColor(grade) {
-        const clamped = Math.max(-15, Math.min(15, grade));
-        const ratio = (clamped + 15) / 30;
+        const clamped = Math.max(-25, Math.min(25, grade));
+        let ratio;
+        if (clamped <= -10) {
+            ratio = (clamped + 25) / 15 * 0.2;
+        } else if (clamped >= 10) {
+            ratio = 0.8 + (clamped - 10) / 15 * 0.2;
+        } else {
+            ratio = 0.2 + (clamped + 10) / 20 * 0.6;
+        }
         const h = (1 - ratio) * 240;
         return hslToHex(h, 70, 50);
     }
@@ -997,9 +1117,14 @@ if (!window.L) {
         if (state.markerInterval > 0) addDistanceMarkers();
     }
 
+    function getGradientBg() {
+        const stops = [];
+        for (let h = 240; h >= 0; h -= 10) stops.push(`hsl(${h},70%,50%)`);
+        return `linear-gradient(to right, ${stops.join(', ')})`;
+    }
+
     function updateColorLegend(mode, minVal, maxVal) {
         const legend = document.getElementById('color-legend');
-        const title = document.getElementById('color-legend-title');
         const bar = document.getElementById('color-legend-bar');
         const minLabel = document.getElementById('color-legend-min');
         const maxLabel = document.getElementById('color-legend-max');
@@ -1008,23 +1133,21 @@ if (!window.L) {
         legend.classList.add('show');
 
         if (mode === 'elevation') {
-            title.textContent = '海拔';
             minLabel.textContent = Math.round(minVal) + 'm';
             maxLabel.textContent = Math.round(maxVal) + 'm';
-            bar.style.background = 'linear-gradient(to right, hsl(240,70%,50%), hsl(180,70%,50%), hsl(120,70%,50%), hsl(60,70%,50%), hsl(0,70%,50%))';
+            bar.style.background = getGradientBg();
         } else if (mode === 'slope') {
-            title.textContent = '坡度';
-            minLabel.textContent = '-15%';
-            maxLabel.textContent = '+15%';
-            bar.style.background = 'linear-gradient(to right, hsl(240,70%,50%), hsl(180,70%,50%), hsl(120,70%,50%), hsl(60,70%,50%), hsl(0,70%,50%))';
+            minLabel.textContent = '-25%';
+            maxLabel.textContent = '+25%';
+            bar.style.background = getGradientBg();
         }
     }
 
     function updateSlopeLegend() {
         const minLabel = document.getElementById('color-legend-min');
         const maxLabel = document.getElementById('color-legend-max');
-        minLabel.textContent = '-15% 下坡';
-        maxLabel.textContent = '+15% 上坡';
+        minLabel.textContent = '-25%';
+        maxLabel.textContent = '+25%';
     }
 
     function addDistanceMarkers() {
@@ -1256,6 +1379,8 @@ if (!window.L) {
         document.getElementById('subtitle').textContent = result.trackDesc || '';
         updateSubtitleToggle();
         document.getElementById('poi-map-toolbar').classList.add('show');
+        document.getElementById('map-color-bar').classList.add('show');
+        document.getElementById('map-right-controls').style.display = 'flex';
         document.getElementById('coords-display').classList.add('show');
         updateWithFilter();
         updateTrackList();
@@ -1264,6 +1389,7 @@ if (!window.L) {
         }
         document.getElementById('download-btn').disabled = false;
         document.getElementById('download-kmz-btn').disabled = false;
+        syncDownloadBtns();
         document.getElementById('map-hint').style.display = 'none';
     }
 
@@ -1369,22 +1495,18 @@ if (!window.L) {
 
     function updateSubtitleToggle() {
         const subtitle = document.getElementById('subtitle');
-        let toggle = subtitle.parentElement.querySelector('.hero-subtitle-toggle');
-        if (!toggle) {
-            toggle = document.createElement('button');
-            toggle.className = 'hero-subtitle-toggle';
-            subtitle.after(toggle);
-            toggle.addEventListener('click', () => {
-                subtitle.classList.toggle('expanded');
-                toggle.textContent = subtitle.classList.contains('expanded') ? '收起' : '展开';
-            });
-        }
-        const needsClamp = subtitle.scrollHeight > subtitle.clientHeight + 2;
-        toggle.style.display = needsClamp ? 'block' : 'none';
-        toggle.textContent = subtitle.classList.contains('expanded') ? '收起' : '展开';
-        if (!needsClamp && subtitle.classList.contains('expanded')) {
-            subtitle.classList.remove('expanded');
-        }
+        const divider = document.getElementById('navbar-divider');
+        const hasContent = subtitle.textContent.trim().length > 0;
+        divider.style.display = hasContent ? '' : 'none';
+    }
+
+    function syncDownloadBtns() {
+        const navGpx = document.getElementById('download-btn');
+        const navKmz = document.getElementById('download-kmz-btn');
+        const cardGpx = document.getElementById('download-btn-card');
+        const cardKmz = document.getElementById('download-kmz-btn-card');
+        if (cardGpx) cardGpx.disabled = navGpx.disabled;
+        if (cardKmz) cardKmz.disabled = navKmz.disabled;
     }
 
     function renderTrack(points) {
@@ -1589,6 +1711,8 @@ if (!window.L) {
         updateSubtitleToggle();
 
         document.getElementById('poi-map-toolbar').classList.add('show');
+        document.getElementById('map-color-bar').classList.add('show');
+        document.getElementById('map-right-controls').style.display = 'flex';
         document.getElementById('coords-display').classList.add('show');
 
         const info = document.getElementById('gpx-info');
@@ -1620,6 +1744,7 @@ if (!window.L) {
 
         document.getElementById('download-btn').disabled = false;
         document.getElementById('download-kmz-btn').disabled = false;
+        syncDownloadBtns();
         document.getElementById('map-hint').style.display = 'none';
     }
 
@@ -1655,6 +1780,59 @@ if (!window.L) {
         }
     }
 
+    function downloadGpx() {
+        if (!state.gpxData || state.rawPoints.length === 0) return;
+        const pts = state.rawPoints;
+        const trkpts = pts.map(p => {
+            let s = `    <trkpt lat="${p.lat.toFixed(7)}" lon="${p.lon.toFixed(7)}">`;
+            s += `\n      <ele>${p.ele.toFixed(1)}</ele>`;
+            if (p.time) s += `\n      <time>${p.time.toISOString()}</time>`;
+            s += `\n    </trkpt>`;
+            return s;
+        }).join('\n');
+        const trackName = document.getElementById('title').textContent.trim();
+        let gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx creator="spot-studio" version="1.1"\n  xmlns="http://www.topografix.com/GPX/1/1"\n  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/11.xsd">\n  <metadata>\n    <name>${trackName}</name>\n    <author>\n      <name>spot-studio</name>\n    </author>\n    <link href="https://github.com/techysy/spot-studio">\n      <text>spot-studio</text>\n    </link>\n  </metadata>\n  <trk>\n    <name>${trackName}</name>\n    <trkseg>\n${trkpts}\n    </trkseg>\n  </trk>\n</gpx>`;
+        if (pois.length > 0) {
+            const wpts = pois.map(p => {
+                const info = POI_TYPES[p.type];
+                return `  <wpt lat="${p.lat}" lon="${p.lng}">\n    <name>${p.name}</name>\n    <desc>${info.emoji} ${info.label}</desc>\n    <sym>${info.label}</sym>\n  </wpt>`;
+            }).join('\n');
+            gpx = gpx.replace('<trk>', wpts + '\n<trk>');
+        }
+        const blob = new Blob([gpx], { type: 'application/gpx+xml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (trackName || 'route') + '.gpx';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function downloadKmz() {
+        if (!state.gpxData || state.rawPoints.length === 0 || !window.JSZip) return;
+        const trackName = document.getElementById('title').textContent.trim() || 'route';
+        const pts = state.rawPoints;
+        const coordinates = pts.map(p => `${p.lon.toFixed(7)},${p.lat.toFixed(7)},${p.ele.toFixed(1)}`).join('\n          ');
+        let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n  <Document>\n    <name>${trackName}</name>\n    <author>spot-studio</author>\n    <Style id="trackStyle">\n      <LineStyle>\n        <color>ff4e3c8e</color>\n        <width>3</width>\n      </LineStyle>\n    </Style>\n    <Placemark>\n      <name>${trackName}</name>\n      <styleUrl>#trackStyle</styleUrl>\n      <LineString>\n        <tessellate>1</tessellate>\n        <coordinates>\n          ${coordinates}\n        </coordinates>\n      </LineString>\n    </Placemark>`;
+        if (pois.length > 0) {
+            pois.forEach(p => {
+                const info = POI_TYPES[p.type];
+                kml += `\n    <Placemark>\n      <name>${p.name}</name>\n      <description>${info.emoji} ${info.label}</description>\n      <Point>\n        <coordinates>${p.lng},${p.lat},0</coordinates>\n      </Point>\n    </Placemark>`;
+            });
+        }
+        kml += `\n  </Document>\n</kml>`;
+        const zip = new JSZip();
+        zip.file('doc.kml', kml);
+        zip.generateAsync({ type: 'blob' }).then(blob => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = trackName + '.kmz';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    }
+
     function initUpload() {
         const input = document.getElementById('gpx-input');
         const zone = document.getElementById('upload-zone');
@@ -1662,6 +1840,8 @@ if (!window.L) {
         const downloadBtn = document.getElementById('download-btn');
 
         btn.addEventListener('click', () => input.click());
+        const cardUploadBtn = document.getElementById('upload-btn-card');
+        if (cardUploadBtn) cardUploadBtn.addEventListener('click', () => input.click());
         zone.addEventListener('click', () => input.click());
 
         input.addEventListener('change', e => {
@@ -1682,64 +1862,14 @@ if (!window.L) {
             if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
         });
 
-        downloadBtn.addEventListener('click', () => {
-            if (!state.gpxData || state.rawPoints.length === 0) return;
-            const pts = state.rawPoints;
-            const trkpts = pts.map(p => {
-                let s = `    <trkpt lat="${p.lat.toFixed(7)}" lon="${p.lon.toFixed(7)}">`;
-                s += `\n      <ele>${p.ele.toFixed(1)}</ele>`;
-                if (p.time) s += `\n      <time>${p.time.toISOString()}</time>`;
-                s += `\n    </trkpt>`;
-                return s;
-            }).join('\n');
-            const trackName = document.getElementById('title').textContent.trim();
-            let gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx creator="spot-studio" version="1.1"\n  xmlns="http://www.topografix.com/GPX/1/1"\n  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/11.xsd">\n  <metadata>\n    <name>${trackName}</name>\n    <author>\n      <name>spot-studio</name>\n    </author>\n    <link href="https://github.com/techysy/spot-studio">\n      <text>spot-studio</text>\n    </link>\n  </metadata>\n  <trk>\n    <name>${trackName}</name>\n    <trkseg>\n${trkpts}\n    </trkseg>\n  </trk>\n</gpx>`;
-            if (pois.length > 0) {
-                const wpts = pois.map(p => {
-                    const info = POI_TYPES[p.type];
-                    return `  <wpt lat="${p.lat}" lon="${p.lng}">\n    <name>${p.name}</name>\n    <desc>${info.emoji} ${info.label}</desc>\n    <sym>${info.label}</sym>\n  </wpt>`;
-                }).join('\n');
-                gpx = gpx.replace('<trk>', wpts + '\n<trk>');
-            }
-            const blob = new Blob([gpx], { type: 'application/gpx+xml' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = (trackName || 'route') + '.gpx';
-            a.click();
-            URL.revokeObjectURL(url);
-        });
+        downloadBtn.addEventListener('click', downloadGpx);
+        const dlCardGpx = document.getElementById('download-btn-card');
+        if (dlCardGpx) dlCardGpx.addEventListener('click', downloadGpx);
 
         const downloadKmzBtn = document.getElementById('download-kmz-btn');
-        downloadKmzBtn.addEventListener('click', () => {
-            if (!state.gpxData || state.rawPoints.length === 0 || !window.JSZip) return;
-            const trackName = document.getElementById('title').textContent.trim() || 'route';
-            const pts = state.rawPoints;
-
-            const coordinates = pts.map(p => `${p.lon.toFixed(7)},${p.lat.toFixed(7)},${p.ele.toFixed(1)}`).join('\n          ');
-
-            let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n  <Document>\n    <name>${trackName}</name>\n    <author>spot-studio</author>\n    <Style id="trackStyle">\n      <LineStyle>\n        <color>ff4e3c8e</color>\n        <width>3</width>\n      </LineStyle>\n    </Style>\n    <Placemark>\n      <name>${trackName}</name>\n      <styleUrl>#trackStyle</styleUrl>\n      <LineString>\n        <tessellate>1</tessellate>\n        <coordinates>\n          ${coordinates}\n        </coordinates>\n      </LineString>\n    </Placemark>`;
-
-            if (pois.length > 0) {
-                pois.forEach(p => {
-                    const info = POI_TYPES[p.type];
-                    kml += `\n    <Placemark>\n      <name>${p.name}</name>\n      <description>${info.emoji} ${info.label}</description>\n      <Point>\n        <coordinates>${p.lng},${p.lat},0</coordinates>\n      </Point>\n    </Placemark>`;
-                });
-            }
-
-            kml += `\n  </Document>\n</kml>`;
-
-            const zip = new JSZip();
-            zip.file('doc.kml', kml);
-            zip.generateAsync({ type: 'blob' }).then(blob => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = trackName + '.kmz';
-                a.click();
-                URL.revokeObjectURL(url);
-            });
-        });
+        downloadKmzBtn.addEventListener('click', downloadKmz);
+        const dlCardKmz = document.getElementById('download-kmz-btn-card');
+        if (dlCardKmz) dlCardKmz.addEventListener('click', downloadKmz);
     }
 
     function initFilterControls() {
@@ -1815,33 +1945,53 @@ if (!window.L) {
     }
 
     function snapToTrack(lat, lng) {
-        if (!state.gpxPoints.length) return { lat, lng };
-        const SNAP_MAX = 50;
+        if (!state.gpxPoints.length) return { lat, lng, snapped: false };
+        const SNAP_MAX = 100;
         let minDist = Infinity;
         let snapped = { lat, lng };
-        for (const pt of state.gpxPoints) {
-            const d = haversine({ lat, lon: lng }, { lat: pt.lat, lon: pt.lon });
-            if (d < minDist) { minDist = d; snapped = { lat: pt.lat, lng: pt.lon }; }
+        let closestIdx = 0;
+        for (let i = 0; i < state.gpxPoints.length; i++) {
+            const d = haversine({ lat, lon: lng }, { lat: state.gpxPoints[i].lat, lon: state.gpxPoints[i].lon });
+            if (d < minDist) { minDist = d; snapped = { lat: state.gpxPoints[i].lat, lng: state.gpxPoints[i].lon }; closestIdx = i; }
         }
-        return minDist <= SNAP_MAX ? snapped : { lat, lng };
+        return minDist <= SNAP_MAX ? { ...snapped, snapped: true, dist: Math.round(minDist), idx: closestIdx } : { lat, lng, snapped: false };
+    }
+
+    function showSnapToast(msg) {
+        let toast = document.getElementById('snap-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'snap-toast';
+            toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(0,0,0,0.75);color:#fff;padding:6px 16px;border-radius:20px;font-size:0.82em;pointer-events:none;transition:opacity 0.3s;opacity:0;';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = msg;
+        toast.style.opacity = '1';
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 1500);
     }
 
     function addPoi(lat, lng, type, name) {
         const info = POI_TYPES[type];
-        const snapped = snapToTrack(lat, lng);
+        const snapResult = snapToTrack(lat, lng);
+        const snappedLat = snapResult.lat;
+        const snappedLng = snapResult.lng;
         const poiName = name || info.label;
 
         const duplicate = pois.find(p =>
             p.type === type && p.name === poiName &&
-            haversine({ lat, lon: lng }, { lat: p.lat, lon: p.lng }) < 5
+            haversine({ lat: snappedLat, lon: snappedLng }, { lat: p.lat, lon: p.lng }) < 5
         );
         if (duplicate) return false;
 
-        const dist = haversine({ lat, lon: lng }, { lat: snapped.lat, lon: snapped.lng });
-        const marker = L.marker([snapped.lat, snapped.lng], { icon: createPoiIcon(type) }).addTo(state.map);
-        const snapText = dist > 1 ? ` (吸附 ${Math.round(dist)}m)` : '';
-        marker.bindPopup(`<b>${info.emoji} ${poiName}</b>${snapText}`);
-        const poi = { lat: snapped.lat, lng: snapped.lng, type, name: poiName, marker };
+        const marker = L.marker([snappedLat, snappedLng], { icon: createPoiIcon(type) }).addTo(state.map);
+        let popupText = `<b>${info.emoji} ${poiName}</b>`;
+        if (snapResult.snapped) {
+            popupText += `<br><small style="color:#27ae60;">✓ 已吸附到路径 (${snapResult.dist}m)</small>`;
+            showSnapToast(`✓ 已吸附到路径 (${snapResult.dist}m)`);
+        }
+        marker.bindPopup(popupText);
+        const poi = { lat: snappedLat, lng: snappedLng, type, name: poiName, marker };
         pois.push(poi);
         renderPoiList();
         return true;
@@ -1893,8 +2043,7 @@ if (!window.L) {
             if (!Array.isArray(data)) return;
             data.forEach(p => {
                 if (p.lat && p.lng && p.type && POI_TYPES[p.type]) {
-                    const snapped = snapToTrack(p.lat, p.lng);
-                    addPoi(snapped.lat, snapped.lng, p.type, p.name);
+                    addPoi(p.lat, p.lng, p.type, p.name);
                 }
             });
         } catch (e) {
@@ -1902,84 +2051,90 @@ if (!window.L) {
         }
     }
 
-    let osmPoiMarkers = [];
-    let osmPoiVisible = false;
+    const osmPoiMarkersByCat = {};
 
-    const OSM_CATEGORIES = [
-        { label: '🚻 厕所', query: 'amenity~"toilets|restroom"', icon: '🚻' },
-        { label: '🏪 商店', query: 'shop~"convenience|supermarket|kiosk"', icon: '🏪' },
-        { label: '🍜 餐饮', query: 'amenity~"restaurant|cafe|fast_food|food_court"', icon: '🍜' },
-        { label: '💧 饮水', query: 'amenity~"drinking_water"', icon: '💧' },
-        { label: '⛽ 加油站', query: 'amenity~"fuel"', icon: '⛽' },
-        { label: '🏨 住宿', query: 'tourism~"hotel|hostel|camp_site|guesthouse"', icon: '🏨' },
-        { label: '🏥 医疗', query: 'amenity~"hospital|clinic|pharmacy|doctors"', icon: '🏥' },
-        { label: '⛰️ 风景点', query: 'tourism~"viewpoint|attraction|information"', icon: '⛰️' }
-    ];
-
-    async function fetchOsmPois() {
+    async function fetchAndShowOsmPois(cat, query, icon) {
         if (!state.gpxPoints.length) return;
         const bounds = state.map.getBounds();
         const s = bounds.getSouth(), w = bounds.getWest(), n = bounds.getNorth(), e = bounds.getEast();
-        const queryParts = OSM_CATEGORIES.map(c => `node[${c.query}](${s},${w},${n},${e});`).join('\n');
-        const query = `[out:json][timeout:15];\n(\n${queryParts}\n);\nout body;`;
-        try {
-            const resp = await fetch('https://overpass-api.de/api/interpreter', {
-                method: 'POST',
-                body: 'data=' + encodeURIComponent(query)
-            });
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const data = await resp.json();
-            return data.elements || [];
-        } catch (e) {
-            console.warn('Overpass API error:', e);
-            return [];
+        const overpassQuery = `[out:json][timeout:15];\n(\nnode[${query}](${s},${w},${n},${e});\n);\nout body;`;
+        const endpoints = [
+            'https://overpass-api.de/api/interpreter',
+            'https://overpass.kumi.systems/api/interpreter',
+            'https://corsproxy.io/?https://overpass-api.de/api/interpreter'
+        ];
+        let data = null;
+        for (const url of endpoints) {
+            try {
+                const resp = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'data=' + encodeURIComponent(overpassQuery)
+                });
+                if (!resp.ok) continue;
+                data = await resp.json();
+                break;
+            } catch (e) { continue; }
         }
+        if (!data) { console.warn('Overpass API failed'); return; }
+        const catColors = {
+            toilets:'#607D8B', shops:'#4CAF50', food:'#FF9800',
+            water:'#2196F3', fuel:'#F44336', lodging:'#9C27B0',
+            medical:'#00BCD4', sights:'#8BC34A'
+        };
+        const catEmoji = {
+            toilets:'🚻', shops:'🏪', food:'🍜', water:'💧',
+            fuel:'⛽', lodging:'🏨', medical:'🏥', sights:'⛰️'
+        };
+        const color = catColors[cat] || '#666';
+        const emoji = catEmoji[cat] || '📌';
+        const markers = [];
+        (data.elements || []).forEach(el => {
+                const tags = el.tags || {};
+                const name = tags.name || tags['name:zh'] || tags['name:en'] || '';
+                const iconHtml = `<div style="width:28px;height:28px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;">${emoji}</div>`;
+                const marker = L.marker([el.lat, el.lon], {
+                    icon: L.divIcon({ html: iconHtml, iconSize: [28, 28], iconAnchor: [14, 14], className: '' })
+                }).addTo(state.map);
+
+                let tagsHtml = '';
+                const importantKeys = ['name', 'name:zh', 'name:en', 'ele', 'cuisine', 'opening_hours', 'phone', 'website', 'addr'];
+                for (const [k, v] of Object.entries(tags)) {
+                    if (k.startsWith('name:') || k === 'name') continue;
+                    tagsHtml += `<tr><td style="padding:2px 8px 2px 0;color:#888;white-space:nowrap;font-size:0.82em;">${k}</td><td style="padding:2px 0;font-size:0.82em;">${v}</td></tr>`;
+                }
+                if (tagsHtml) tagsHtml = `<table style="border-collapse:collapse;margin-top:6px;width:100%;">${tagsHtml}</table>`;
+
+                const popupHtml = `
+                    <div style="min-width:200px;max-width:280px;">
+                        <div style="font-weight:600;font-size:0.95em;margin-bottom:2px;">${name || cat}</div>
+                        <div style="font-size:0.75em;color:#999;margin-bottom:4px;">${el.lat.toFixed(6)}, ${el.lon.toFixed(6)}</div>
+                        ${tagsHtml}
+                        <div style="border-top:1px solid #eee;margin-top:8px;padding-top:8px;">
+                            <button class="osm-poi-import-btn" data-lat="${el.lat}" data-lng="${el.lon}" data-name="${(name || cat).replace(/"/g,'&quot;')}" data-cat="${cat}" data-emoji="${emoji}"
+                                style="width:100%;padding:6px 0;border:1px solid #ddd;border-radius:6px;background:#f8f8f8;cursor:pointer;font-size:0.82em;color:#333;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;">
+                                <span style="font-size:1.1em;">⊕</span> 将兴趣点添加到文件
+                            </button>
+                        </div>
+                    </div>`;
+                marker.bindPopup(popupHtml);
+                markers.push(marker);
+            });
+            osmPoiMarkersByCat[cat] = markers;
     }
 
-    function clearOsmPois() {
-        osmPoiMarkers.forEach(m => state.map.removeLayer(m));
-        osmPoiMarkers = [];
-    }
-
-    async function toggleOsmPois() {
-        const btn = document.getElementById('osm-poi-toggle');
-        if (osmPoiVisible) {
-            clearOsmPois();
-            osmPoiVisible = false;
-            btn.classList.remove('active');
-            return;
+    function clearOsmPoisByCat(cat) {
+        if (osmPoiMarkersByCat[cat]) {
+            osmPoiMarkersByCat[cat].forEach(m => state.map.removeLayer(m));
+            delete osmPoiMarkersByCat[cat];
         }
-        btn.classList.add('active');
-        btn.textContent = '⏳';
-        const elements = await fetchOsmPois();
-        btn.textContent = '🏪';
-        elements.forEach(el => {
-            const tags = el.tags || {};
-            const cat = OSM_CATEGORIES.find(c => {
-                const [key, vals] = c.query.split('~');
-                const valueList = vals.replace(/"/g, '').split('|');
-                return valueList.includes(tags[key]);
-            });
-            const name = tags.name || tags['name:zh'] || tags['name:en'] || '';
-            const icon = cat ? cat.icon : '📌';
-            const catLabel = cat ? cat.label : Object.entries(tags).map(([k, v]) => `${k}=${v}`).join(', ');
-            const marker = L.marker([el.lat, el.lon], {
-                icon: L.divIcon({
-                    html: `<div style="font-size:18px;text-shadow:0 1px 3px rgba(0,0,0,0.3);">${icon}</div>`,
-                    iconSize: [20, 20], iconAnchor: [10, 10], className: ''
-                })
-            }).addTo(state.map);
-            marker.bindPopup(`<b>${name || 'POI'}</b><br><small style="color:#999;">${catLabel}</small>`);
-            osmPoiMarkers.push(marker);
-        });
-        osmPoiVisible = true;
     }
 
     function initPoi() {
         const toolbar = document.getElementById('poi-map-toolbar');
 
         state.map.on('click', async function(e) {
-            if (!activePoiType) return;
+            if (!activePoiType || state.measureMode || state.addPointMode || state.deletePointMode) return;
             const info = POI_TYPES[activePoiType];
             const name = await showModal(`添加${info.label}`, info.label, '输入名称，留空使用默认');
             if (name === null) return;
@@ -2015,17 +2170,23 @@ if (!window.L) {
             reader.onload = ev => importPois(ev.target.result);
             reader.readAsText(file);
         });
-        document.getElementById('osm-poi-toggle').addEventListener('click', toggleOsmPois);
+        document.getElementById('poi-clear-all').addEventListener('click', () => {
+            if (pois.length === 0) return;
+            if (!confirm('确定清空所有兴趣点？')) return;
+            pois.forEach(p => state.map.removeLayer(p.marker));
+            pois.length = 0;
+            renderPoiList();
+        });
     }
 
     function initColorMode() {
-        const toolbar = document.getElementById('poi-map-toolbar');
-        toolbar.addEventListener('click', e => {
+        const colorBar = document.getElementById('map-color-bar');
+        colorBar.addEventListener('click', e => {
             const btn = e.target.closest('.color-mode-btn');
             if (!btn) return;
             const mode = btn.dataset.mode;
 
-            toolbar.querySelectorAll('.color-mode-btn').forEach(b => b.classList.remove('active'));
+            colorBar.querySelectorAll('.color-mode-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             state.colorMode = mode;
 
@@ -2062,6 +2223,7 @@ if (!window.L) {
 
         state.map.on('contextmenu', function(e) {
             e.originalEvent.preventDefault();
+            if (state.measureMode) return;
             contextLatLng = e.latlng;
             if (contextMarker) state.map.removeLayer(contextMarker);
             contextMarker = L.marker(e.latlng, {
@@ -2071,8 +2233,8 @@ if (!window.L) {
                 })
             }).addTo(state.map);
 
-            menu.style.left = e.originalEvent.pageX + 'px';
-            menu.style.top = e.originalEvent.pageY + 'px';
+            menu.style.left = e.originalEvent.clientX + 'px';
+            menu.style.top = e.originalEvent.clientY + 'px';
             menu.classList.add('show');
         });
 
@@ -2114,24 +2276,40 @@ if (!window.L) {
         const btn = document.getElementById('tool-measure');
         const result = document.getElementById('measure-result');
 
-        btn.addEventListener('click', () => {
-            state.measureMode = !state.measureMode;
-            btn.classList.toggle('active', state.measureMode);
-            document.getElementById('map').style.cursor = state.measureMode ? 'crosshair' : '';
+        function startMeasure() {
+            state.measureMode = true;
+            btn.classList.add('active');
+            document.getElementById('map').style.cursor = 'crosshair';
+            result.textContent = '点击地图放置测距点，双击结束';
+            result.classList.add('show');
+        }
 
-            if (!state.measureMode) {
-                clearMeasure();
-                result.classList.remove('show');
+        function stopMeasure() {
+            state.measureMode = false;
+            btn.classList.remove('active');
+            document.getElementById('map').style.cursor = '';
+            clearMeasure();
+            result.classList.remove('show');
+        }
+
+        function restartMeasure() {
+            clearMeasure();
+            result.textContent = '点击地图放置测距点，双击结束';
+            result.classList.add('show');
+        }
+
+        btn.addEventListener('click', () => {
+            if (state.measureMode) {
+                stopMeasure();
             } else {
-                result.textContent = '点击地图放置测距点，双击结束';
-                result.classList.add('show');
+                startMeasure();
             }
         });
 
         state.map.on('click', function(e) {
             if (!state.measureMode) return;
 
-            state.measurePoints.push(e.latlng);
+            state.measurePoints.push({ lat: e.latlng.lat, lng: e.latlng.lng });
 
             const icon = L.divIcon({
                 html: `<div style="background:var(--accent);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,0.3);">${state.measurePoints.length}</div>`,
@@ -2163,6 +2341,14 @@ if (!window.L) {
             document.getElementById('map').style.cursor = '';
             if (state.measurePoints.length === 0) result.classList.remove('show');
         });
+
+        state.map.on('contextmenu', function() {
+            if (state.measureMode) {
+                restartMeasure();
+            }
+        });
+
+        state._stopMeasure = stopMeasure;
     }
 
     function startMeasureFrom(latlng) {
@@ -2170,7 +2356,7 @@ if (!window.L) {
         state.measureMode = true;
         document.getElementById('tool-measure').classList.add('active');
         document.getElementById('map').style.cursor = 'crosshair';
-        state.measurePoints.push(latlng);
+        state.measurePoints.push({ lat: latlng.lat, lng: latlng.lng });
 
         const icon = L.divIcon({
             html: `<div style="background:var(--accent);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,0.3);">1</div>`,
@@ -2201,8 +2387,6 @@ if (!window.L) {
     function initEditorToolbar() {
         const undoBtn = document.getElementById('tool-undo');
         const redoBtn = document.getElementById('tool-redo');
-        const addBtn = document.getElementById('tool-addpoint');
-        const deleteBtn = document.getElementById('tool-deletepoint');
 
         undoBtn.addEventListener('click', () => {
             if (state.undoStack.length === 0) return;
@@ -2232,42 +2416,6 @@ if (!window.L) {
             }
             updateWithFilter();
             updateUndoRedoButtons();
-        });
-
-        addBtn.addEventListener('click', () => {
-            state.addPointMode = !state.addPointMode;
-            addBtn.classList.toggle('active', state.addPointMode);
-            state.deletePointMode = false;
-            deleteBtn.classList.remove('active');
-            document.getElementById('map').style.cursor = state.addPointMode ? 'crosshair' : '';
-            if (!state.addPointMode) removeEditHandles();
-        });
-
-        deleteBtn.addEventListener('click', () => {
-            state.deletePointMode = !state.deletePointMode;
-            deleteBtn.classList.toggle('active', state.deletePointMode);
-            state.addPointMode = false;
-            addBtn.classList.remove('active');
-            document.getElementById('map').style.cursor = state.deletePointMode ? 'crosshair' : '';
-            if (state.deletePointMode) showEditHandles();
-            else removeEditHandles();
-        });
-
-        state.map.on('click', function(e) {
-            if (state.addPointMode && state.rawPoints.length > 0) {
-                let minDist = Infinity;
-                let insertIdx = state.rawPoints.length;
-                for (let i = 1; i < state.rawPoints.length; i++) {
-                    const d = distToSegment(e.latlng, state.rawPoints[i-1], state.rawPoints[i]);
-                    if (d < minDist) { minDist = d; insertIdx = i; }
-                }
-                state.undoStack.push({ type: 'add', index: insertIdx, point: { lat: e.latlng.lat, lon: e.latlng.lng, ele: 0, time: null } });
-                state.redoStack = [];
-                state.rawPoints.splice(insertIdx, 0, { lat: e.latlng.lat, lon: e.latlng.lng, ele: 0, time: null });
-                updateWithFilter();
-
-                updateUndoRedoButtons();
-            }
         });
     }
 
@@ -2488,6 +2636,41 @@ if (!window.L) {
         initEditorToolbar();
         initElevationInteraction();
         updateUndoRedoButtons();
+
+        document.getElementById('map').addEventListener('click', async function(e) {
+            const btn = e.target.closest('.osm-poi-import-btn');
+            if (!btn) return;
+            e.preventDefault(); e.stopPropagation();
+            const lat = parseFloat(btn.dataset.lat);
+            const lng = parseFloat(btn.dataset.lng);
+            const cat = btn.dataset.cat;
+            const defaultName = btn.dataset.name;
+            const catLabels = {
+                toilets:'厕所', shops:'商店', food:'餐饮', water:'饮水',
+                fuel:'加油站', lodging:'住宿', medical:'医疗', sights:'风景点'
+            };
+            const typeMap = { toilets:'toilet', shops:'supply', food:'supply', water:'water', fuel:'supply', lodging:'rest', medical:'rest', sights:'photo' };
+            const poiType = typeMap[cat] || 'photo';
+            const name = await showModal(`添加${catLabels[cat] || '兴趣点'}`, defaultName, '输入名称，留空使用默认');
+            if (name === null) return;
+            addPoi(lat, lng, poiType, name || defaultName);
+            state.map.closePopup();
+        });
+
+        document.getElementById('map-zoom-in').addEventListener('click', () => state.map.zoomIn());
+        document.getElementById('map-zoom-out').addEventListener('click', () => state.map.zoomOut());
+        document.getElementById('map-locate').addEventListener('click', () => {
+            if (!navigator.geolocation) { alert('浏览器不支持定位'); return; }
+            const btn = document.getElementById('map-locate');
+            btn.classList.add('active');
+            navigator.geolocation.getCurrentPosition(pos => {
+                state.map.setView([pos.coords.latitude, pos.coords.longitude], 14);
+                btn.classList.remove('active');
+            }, () => {
+                alert('无法获取位置');
+                btn.classList.remove('active');
+            });
+        });
 
         const subtitleEl = document.getElementById('subtitle');
         new MutationObserver(() => updateSubtitleToggle()).observe(subtitleEl, { childList: true, characterData: true, subtree: true });
