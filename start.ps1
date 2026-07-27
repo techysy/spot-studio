@@ -86,7 +86,7 @@ function Start-Server {
     Write-Host ""
     Write-Host "Starting HTTP server on port $($script:port)..." -ForegroundColor Yellow
 
-    $process = Start-Process -FilePath "python" -ArgumentList "-m http.server $($script:port) --directory $scriptPath" -WorkingDirectory $scriptPath -NoNewWindow -PassThru
+    $process = Start-Process -FilePath "python" -ArgumentList "-m http.server $($script:port) --directory `"$scriptPath`"" -WorkingDirectory $scriptPath -NoNewWindow -PassThru
     $process.Id | Out-File -FilePath $pidFile -Encoding UTF8
     Start-Sleep -Seconds 2
 

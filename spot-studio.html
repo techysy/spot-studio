@@ -542,10 +542,21 @@
         @media (max-width: 768px) {
             .navbar { padding: 0 10px; }
             .navbar-subtitle { display: none; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
             .details-grid { grid-template-columns: 1fr; }
-            #map { height: calc(100vh - 48px - 400px); min-height: 250px; }
-            .stat-value { font-size: 1.3em; }
+            #map { height: calc(100vh - 48px - 240px); min-height: 250px; }
+            .stat-card { padding: 8px 4px; }
+            .stat-icon { font-size: 1.1em; margin-bottom: 2px; }
+            .stat-value { font-size: 1em; }
+            .stat-label { font-size: 0.65em; margin-top: 2px; }
+            .elevation-card { padding: 10px 12px; margin-bottom: 8px; }
+            #elevation-chart { height: 100px; }
+            .content-area { padding: 8px 10px 20px; }
+            .map-bottom-bar { bottom: 28px; }
+            .coords-display { bottom: 28px; }
+            .map-color-bar { bottom: 28px; }
+            .color-legend { bottom: 28px; }
+            .map-hint { bottom: 28px; }
         }
     </style>
 </head>
