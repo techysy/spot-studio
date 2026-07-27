@@ -2760,11 +2760,19 @@ if (!window.L) {
                             <div style="font-size:0.88em;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</div>
                             <div style="font-size:0.75em;color:var(--text-muted);">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</div>
                         </div>
-                        <button onclick="document.getElementById('poi-modal-overlay').classList.remove('show');state.map.setView([${p.lat},${p.lng}],16);" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card);font-size:0.78em;cursor:pointer;white-space:nowrap;">定位</button>
+                        <button class="poi-locate-btn" data-lat="${p.lat}" data-lng="${p.lng}" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card);font-size:0.78em;cursor:pointer;white-space:nowrap;">定位</button>
                     </div>`;
                 }).join('');
             }
             document.getElementById('poi-modal-overlay').classList.add('show');
+        });
+        document.getElementById('poi-modal-list').addEventListener('click', e => {
+            const btn = e.target.closest('.poi-locate-btn');
+            if (!btn) return;
+            const lat = parseFloat(btn.dataset.lat);
+            const lng = parseFloat(btn.dataset.lng);
+            document.getElementById('poi-modal-overlay').classList.remove('show');
+            state.map.setView([lat, lng], 16);
         });
         document.getElementById('poi-modal-close').addEventListener('click', () => {
             document.getElementById('poi-modal-overlay').classList.remove('show');
