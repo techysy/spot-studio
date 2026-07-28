@@ -400,7 +400,8 @@
             background: var(--bg); border-radius: 8px; font-size: 0.82em;
         }
         .poi-item .poi-type { font-size: 1.1em; flex-shrink: 0; }
-        .poi-item .poi-name { flex: 1; color: var(--text); }
+        .poi-item .poi-name { flex: 1; color: var(--text); cursor: pointer; border-bottom: 1px dashed transparent; transition: border-color 0.2s; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .poi-item .poi-name:hover { border-bottom-color: var(--accent); color: var(--accent); }
         .poi-item .poi-del {
             width: 22px; height: 22px; border-radius: 50%; border: none;
             background: #fee; color: #c0392b; cursor: pointer; font-size: 0.75em;
@@ -2032,7 +2033,7 @@ if (!window.L) {
             const info = POI_TYPES[p.type];
             return `<div class="poi-item">
                 <span class="poi-type">${info.emoji}</span>
-                <span class="poi-name">${p.name}</span>
+                <span class="poi-name" data-idx="${i}" title="点击重命名">${p.name}</span>
                 <button class="poi-del" data-idx="${i}">✕</button>
             </div>`;
         }).join('');
@@ -2040,6 +2041,19 @@ if (!window.L) {
         list.querySelectorAll('.poi-del').forEach(btn => {
             btn.addEventListener('click', () => removePoi(parseInt(btn.dataset.idx)));
         });
+        list.querySelectorAll('.poi-name').forEach(el => {
+            el.addEventListener('click', () => renamePoi(parseInt(el.dataset.idx)));
+        });
+    }
+
+    async function renamePoi(idx) {
+        if (!pois[idx]) return;
+        const info = POI_TYPES[pois[idx].type];
+        const name = await showModal(`重命名${info.label}`, pois[idx].name, '输入新名称');
+        if (name === null || !name.trim()) return;
+        pois[idx].name = name.trim();
+        pois[idx].marker.setPopupContent(`<b>${info.emoji} ${pois[idx].name}</b>`);
+        renderPoiList();
     }
 
     function exportPois() {
@@ -2762,7 +2776,7 @@ if (!window.L) {
                     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:8px;margin-bottom:6px;">
                         <span style="font-size:1.3em;">${info.emoji}</span>
                         <div style="flex:1;min-width:0;">
-                            <div style="font-size:0.88em;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</div>
+                            <div class="poi-modal-name" data-idx="${i}" style="font-size:0.88em;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;border-bottom:1px dashed transparent;transition:border-color 0.2s;">${p.name}</div>
                             <div style="font-size:0.75em;color:var(--text-muted);">${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</div>
                         </div>
                         <button class="poi-locate-btn" data-lat="${p.lat}" data-lng="${p.lng}" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card);font-size:0.78em;cursor:pointer;white-space:nowrap;">定位</button>
@@ -2772,6 +2786,11 @@ if (!window.L) {
             document.getElementById('poi-modal-overlay').classList.add('show');
         });
         document.getElementById('poi-modal-overlay').addEventListener('click', e => {
+            const nameEl = e.target.closest('.poi-modal-name');
+            if (nameEl) {
+                renamePoi(parseInt(nameEl.dataset.idx));
+                return;
+            }
             const btn = e.target.closest('.poi-locate-btn');
             if (!btn) return;
             const lat = parseFloat(btn.dataset.lat);
