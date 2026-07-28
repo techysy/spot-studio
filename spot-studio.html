@@ -2048,6 +2048,9 @@ if (!window.L) {
 
     async function renamePoi(idx) {
         if (!pois[idx]) return;
+        document.getElementById('poi-modal-overlay').classList.remove('show');
+        state.map.setView([pois[idx].lat, pois[idx].lng], Math.max(state.map.getZoom(), 15));
+        pois[idx].marker.openPopup();
         const info = POI_TYPES[pois[idx].type];
         const name = await showModal(`重命名${info.label}`, pois[idx].name, '输入新名称');
         if (name === null || !name.trim()) return;
