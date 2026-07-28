@@ -617,6 +617,7 @@
             <div class="layer-dropdown" id="layer-dropdown">
                 <div class="ld-section">
                     <div class="ld-section-title">底图</div>
+                    <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="carto"><span class="ld-radio-visual"></span>CARTO</label>
                     <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="osm" checked><span class="ld-radio-visual"></span>OpenStreetMap</label>
                     <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="opentopo"><span class="ld-radio-visual"></span>OpenTopoMap</label>
                     <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="satellite"><span class="ld-radio-visual"></span>卫星 (Esri)</label>
@@ -625,9 +626,9 @@
                 <div class="ld-section">
                     <div class="ld-section-title">兴趣点 (OSM)</div>
                     <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="toilets"><span class="ld-check-visual"></span>🚻 厕所</label>
-                    <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="shops"><span class="ld-check-visual"></span>🏪 商店</label>
+                    <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="shops"><span class="ld-check-visual"></span>🛒 商店</label>
                     <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="food"><span class="ld-check-visual"></span>🍜 餐饮</label>
-                    <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="water"><span class="ld-check-visual"></span>💧 饮水</label>
+                    <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="cafes"><span class="ld-check-visual"></span>☕ 咖啡</label>
                     <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="fuel"><span class="ld-check-visual"></span>⛽ 加油站</label>
                     <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="lodging"><span class="ld-check-visual"></span>🏨 住宿</label>
                     <label class="ld-item"><input type="checkbox" class="osm-poi-cb" data-cat="medical"><span class="ld-check-visual"></span>🏥 医疗</label>
@@ -861,6 +862,10 @@ if (!window.L) {
         }).setView([30.5728, 104.0668], 12);
 
         state.layers = {
+            carto: L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+                maxZoom: 19
+            }),
             opentopo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://opentopomap.org">OpenTopoMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
                 maxZoom: 17
@@ -908,13 +913,13 @@ if (!window.L) {
             toilets: 'amenity~"toilets|restroom"',
             shops: 'shop~"convenience|supermarket|kiosk"',
             food: 'amenity~"restaurant|cafe|fast_food|food_court"',
-            water: 'amenity~"drinking_water"',
+            cafes: 'amenity~"cafe"',
             fuel: 'amenity~"fuel"',
             lodging: 'tourism~"hotel|hostel|camp_site|guesthouse"',
             medical: 'amenity~"hospital|clinic|pharmacy|doctors"',
             sights: 'tourism~"viewpoint|attraction|information"'
         };
-        const osmIcons = { toilets:'🚻', shops:'🏪', food:'🍜', water:'💧', fuel:'⛽', lodging:'🏨', medical:'🏥', sights:'⛰️' };
+        const osmIcons = { toilets:'🚻', shops:'🛒', food:'🍜', cafes:'☕', fuel:'⛽', lodging:'🏨', medical:'🏥', sights:'⛰️' };
 
         dropdown.querySelectorAll('.osm-poi-cb').forEach(cb => {
             cb.addEventListener('change', async () => {
@@ -2090,11 +2095,11 @@ if (!window.L) {
         if (!data) { console.warn('Overpass API failed'); return; }
         const catColors = {
             toilets:'#607D8B', shops:'#4CAF50', food:'#FF9800',
-            water:'#2196F3', fuel:'#F44336', lodging:'#9C27B0',
+            cafes:'#795548', fuel:'#F44336', lodging:'#9C27B0',
             medical:'#00BCD4', sights:'#8BC34A'
         };
         const catEmoji = {
-            toilets:'🚻', shops:'🏪', food:'🍜', water:'💧',
+            toilets:'🚻', shops:'🛒', food:'🍜', cafes:'☕',
             fuel:'⛽', lodging:'🏨', medical:'🏥', sights:'⛰️'
         };
         const color = catColors[cat] || '#666';
@@ -2657,10 +2662,10 @@ if (!window.L) {
             const cat = btn.dataset.cat;
             const defaultName = btn.dataset.name;
             const catLabels = {
-                toilets:'厕所', shops:'商店', food:'餐饮', water:'饮水',
+                toilets:'厕所', shops:'商店', food:'餐饮', cafes:'咖啡',
                 fuel:'加油站', lodging:'住宿', medical:'医疗', sights:'风景点'
             };
-            const typeMap = { toilets:'toilet', shops:'supply', food:'supply', water:'water', fuel:'supply', lodging:'rest', medical:'rest', sights:'photo' };
+            const typeMap = { toilets:'toilet', shops:'supply', food:'supply', cafes:'supply', fuel:'supply', lodging:'rest', medical:'rest', sights:'photo' };
             const poiType = typeMap[cat] || 'photo';
             const name = await showModal(`添加${catLabels[cat] || '兴趣点'}`, defaultName, '输入名称，留空使用默认');
             if (name === null) return;
@@ -2766,11 +2771,12 @@ if (!window.L) {
             }
             document.getElementById('poi-modal-overlay').classList.add('show');
         });
-        document.getElementById('poi-modal-list').addEventListener('click', e => {
+        document.getElementById('poi-modal-overlay').addEventListener('click', e => {
             const btn = e.target.closest('.poi-locate-btn');
             if (!btn) return;
             const lat = parseFloat(btn.dataset.lat);
             const lng = parseFloat(btn.dataset.lng);
+            if (isNaN(lat) || isNaN(lng)) return;
             document.getElementById('poi-modal-overlay').classList.remove('show');
             state.map.setView([lat, lng], 16);
         });
