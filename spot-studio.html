@@ -622,6 +622,7 @@
                     <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="osm" checked><span class="ld-radio-visual"></span>OpenStreetMap</label>
                     <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="opentopo"><span class="ld-radio-visual"></span>OpenTopoMap</label>
                     <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="satellite"><span class="ld-radio-visual"></span>卫星 (Esri)</label>
+                    <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="hiking"><span class="ld-radio-visual"></span>OpenHikingMap</label>
                 </div>
                 <div class="ld-divider"></div>
                 <div class="ld-section">
@@ -878,6 +879,10 @@ if (!window.L) {
             satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: '&copy; Esri, Maxar, Earthstar Geographics',
                 maxZoom: 18
+            }),
+            hiking: L.tileLayer('https://tile.openmaps.fr/openhikingmap/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://openmaps.fr">OpenHikingMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+                maxZoom: 17
             })
         };
 
