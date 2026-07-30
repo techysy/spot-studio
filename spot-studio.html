@@ -122,7 +122,8 @@
         }
         #map {
             width: 100%;
-            height: calc(100vh - 48px - 440px);
+            aspect-ratio: 1 / 1;
+            max-height: calc(100vh - 48px);
             min-height: 250px;
             background: #e8e8e8;
         }
@@ -326,13 +327,20 @@
             font-weight: 700; padding: 0 3px;
         }
         .map-color-bar {
-            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: 100px; right: 12px;
             z-index: 1000; display: none;
-            gap: 6px; padding: 6px 10px;
-            background: rgba(255,255,255,0.95); border-radius: 10px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.15); backdrop-filter: blur(8px);
+            flex-direction: column; gap: 4px; padding: 4px;
+            background: transparent;
         }
         .map-color-bar.show { display: flex; }
+        .color-mode-btn {
+            display: flex; align-items: center; gap: 6px;
+            width: auto; padding: 4px 10px; font-size: 13px;
+            border-radius: 8px; background: rgba(255,255,255,0.85);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12); backdrop-filter: blur(6px);
+        }
+        .color-mode-btn.active { background: rgba(255,255,255,0.95); box-shadow: 0 1px 6px rgba(0,0,0,0.2); }
+        .color-mode-btn .cm-label { font-size: 12px; color: #333; }
         .map-right-controls {
             position: absolute; top: 12px; right: 12px;
             z-index: 1000; display: none;
@@ -417,9 +425,9 @@
 
         .color-legend {
             position: absolute; bottom: 40px; right: 12px; z-index: 1000;
-            background: rgba(255,255,255,0.95); border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.12); padding: 8px 14px;
-            display: none; min-width: 160px;
+            background: rgba(255,255,255,0.85); border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12); padding: 8px 14px;
+            display: none; min-width: 160px; backdrop-filter: blur(6px);
         }
         .color-legend.show { display: block; }
         .color-legend-bar {
@@ -490,10 +498,11 @@
 
         .coords-display {
             position: absolute; bottom: 40px; left: 12px; z-index: 1000;
-            background: rgba(0,0,0,0.7); color: #fff;
+            background: rgba(255,255,255,0.85); color: #333;
             padding: 4px 10px; border-radius: 6px; font-size: 0.72em;
             font-family: 'SF Mono', 'Menlo', monospace; display: none;
-            white-space: nowrap;
+            white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+            backdrop-filter: blur(6px);
         }
         .coords-display.show { display: block; }
         .color-legend { flex: 1; justify-content: flex-end; }
@@ -555,9 +564,20 @@
             .content-area { padding: 8px 10px 20px; }
             .map-bottom-bar { bottom: 28px; }
             .coords-display { bottom: 28px; }
-            .map-color-bar { bottom: 28px; }
+            .map-color-bar { bottom: 28px; right: 8px; }
             .color-legend { bottom: 28px; }
             .map-hint { bottom: 28px; }
+        }
+        @media (min-width: 769px) and (max-height: 900px) {
+            #map { height: calc(100vh - 48px - 320px); min-height: 250px; }
+            .elevation-card { padding: 12px 16px; margin-bottom: 10px; }
+            #elevation-chart { height: 140px; }
+            .stat-card { padding: 10px 8px; }
+            .details-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .content-area { padding: 10px 16px 24px; }
+        }
+        @media (min-width: 769px) and (min-height: 901px) {
+            #map { height: calc(100vh - 48px - 440px); min-height: 300px; }
         }
     </style>
 </head>
@@ -598,9 +618,9 @@
         </div>
     </div>
     <div class="map-color-bar" id="map-color-bar">
-        <button class="map-tool-btn color-mode-btn active" data-mode="none" title="着色：无">🎨</button>
-        <button class="map-tool-btn color-mode-btn" data-mode="elevation" title="着色：海拔">⛰️</button>
-        <button class="map-tool-btn color-mode-btn" data-mode="slope" title="着色：坡度">📐</button>
+        <button class="map-tool-btn color-mode-btn active" data-mode="none" title="着色：无">🎨<span class="cm-label">无</span></button>
+        <button class="map-tool-btn color-mode-btn" data-mode="elevation" title="着色：海拔">⛰️<span class="cm-label">海拔</span></button>
+        <button class="map-tool-btn color-mode-btn" data-mode="slope" title="着色：坡度">📐<span class="cm-label">坡度</span></button>
     </div>
     <div class="map-right-controls" id="map-right-controls">
         <button class="map-ctrl-btn" id="map-locate" title="我的位置">
@@ -619,9 +639,10 @@
                 <div class="ld-section">
                     <div class="ld-section-title">底图</div>
                     <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="carto"><span class="ld-radio-visual"></span>CARTO</label>
-                    <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="osm" checked><span class="ld-radio-visual"></span>OpenStreetMap</label>
+                    <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="osm"><span class="ld-radio-visual"></span>OpenStreetMap</label>
                     <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="opentopo"><span class="ld-radio-visual"></span>OpenTopoMap</label>
                     <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="satellite"><span class="ld-radio-visual"></span>卫星 (Esri)</label>
+                    <label class="ld-item ld-radio"><input type="radio" name="base-layer" value="hiking"><span class="ld-radio-visual"></span>OpenHikingMap</label>
                 </div>
                 <div class="ld-divider"></div>
                 <div class="ld-section">
@@ -784,7 +805,7 @@ if (!window.L) {
     document.write('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>');
 }
 </script>
-<script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="jszip.min.js"></script>
 <script>
 (function() {
     const state = {
@@ -878,11 +899,14 @@ if (!window.L) {
             satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: '&copy; Esri, Maxar, Earthstar Geographics',
                 maxZoom: 18
+            }),
+            hiking: L.tileLayer('https://tile.openmaps.fr/openhikingmap/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://openmaps.fr">OpenHikingMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+                maxZoom: 17
             })
         };
 
-        state.currentLayer = 'osm';
-        state.layers.osm.addTo(state.map);
+        state.currentLayer = null;
 
         setTimeout(() => state.map.invalidateSize(), 100);
     }
@@ -904,7 +928,9 @@ if (!window.L) {
             radio.addEventListener('change', () => {
                 const layer = radio.value;
                 if (layer === state.currentLayer) return;
-                state.map.removeLayer(state.layers[state.currentLayer]);
+                if (state.currentLayer && state.layers[state.currentLayer]) {
+                    state.map.removeLayer(state.layers[state.currentLayer]);
+                }
                 state.layers[layer].addTo(state.map);
                 state.currentLayer = layer;
             });
