@@ -99,7 +99,7 @@
         }
         .navbar-subtitle:empty { display: none; }
         .navbar-spacer { flex: 1; }
-        .navbar-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .navbar-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; position: relative; }
         .navbar-btn {
             padding: 6px 12px; border-radius: 8px;
             border: 1px solid var(--border);
@@ -347,6 +347,22 @@
 
         .footer { display: none; }
 
+        .download-dropdown {
+            position: absolute; top: 44px; right: 10px; z-index: 200;
+            background: var(--card); border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.18); padding: 4px 0;
+            min-width: 120px; display: none;
+        }
+        .download-dropdown.show { display: block; }
+        .dd-item {
+            display: block; width: 100%; padding: 8px 16px;
+            border: none; background: none; text-align: left;
+            font-size: 0.85em; color: var(--text); cursor: pointer;
+            transition: background 0.15s;
+        }
+        .dd-item:hover { background: var(--bg); }
+        .dd-item:disabled { opacity: 0.4; cursor: not-allowed; }
+
         .color-legend {
             position: absolute; bottom: 40px; right: 12px; z-index: 1000;
             background: rgba(255,255,255,0.85); border-radius: 8px;
@@ -461,27 +477,59 @@
         #filter-modal-toggle:checked ~ #filter-modal-dot { left: 22px; }
 
         /* ===== Responsive ===== */
+        @media (max-width: 480px) {
+            .navbar-title { font-size: 0.9em; max-width: 120px; }
+            .navbar-actions .navbar-btn { padding: 4px 8px; font-size: 0.75em; gap: 2px; }
+            .icon-btn { width: 32px; height: 32px; font-size: 14px; }
+            /* Collapse GPX/KMZ buttons into a single "⬇" dropdown */
+            .navbar-actions .navbar-btn#download-btn,
+            .navbar-actions .navbar-btn#download-kmz-btn { display: none; }
+            .navbar-actions #download-menu-btn { display: inline-flex; }
+        }
+        @media (min-width: 481px) {
+            .navbar-actions #download-menu-btn { display: none; }
+        }
         @media (max-width: 768px) {
             .navbar { padding: 0 10px; height: 44px; }
             .navbar-subtitle { display: none; }
             .navbar .navbar-btn.primary { display: none; }
+            /* Stats: 2 columns on mobile */
             .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 8px; }
             .details-grid { grid-template-columns: 1fr; gap: 8px; }
-            #map { aspect-ratio: 4/3; max-height: 50vh; min-height: 200px; }
+            #map { aspect-ratio: 3/4; max-height: 45vh; min-height: 200px; }
             .stat-card { padding: 8px 4px; }
             .stat-icon { font-size: 1.1em; margin-bottom: 2px; }
             .stat-value { font-size: 1em; }
             .stat-label { font-size: 0.65em; margin-top: 2px; }
             .elevation-card { padding: 10px 12px; margin-bottom: 8px; }
-            #elevation-chart { height: 100px; }
+            #elevation-chart { height: 90px; }
             .content-area { padding: 8px 10px 20px; }
             .map-color-bar { bottom: 28px; right: 8px; }
-            .color-legend { bottom: 28px; }
-            .map-hint { bottom: 28px; }
-            .coords-display { bottom: 28px; }
-            .poi-map-toolbar-inner { gap: 4px; padding: 6px 8px; }
-            .map-tool-btn { width: 28px; height: 28px; font-size: 0.75em; }
-            .modal-box { padding: 20px 16px 16px; width: 90vw; }
+            .color-legend { bottom: 28px; right: 6px; min-width: 130px; padding: 6px 10px; }
+            .map-hint { bottom: 28px; font-size: 0.78em; padding: 8px 14px; }
+            .coords-display { bottom: 28px; font-size: 0.68em; }
+            .poi-map-toolbar-inner { gap: 4px; padding: 6px 8px; max-width: calc(100vw - 24px); overflow-x: auto; flex-wrap: nowrap; }
+            .map-toolbar-sep { display: none; }
+            .map-toolbar-group { gap: 3px; flex-wrap: nowrap; flex-shrink: 0; }
+            .map-tool-btn { width: 30px; height: 30px; font-size: 0.78em; }
+            .modal-box { padding: 20px 16px 16px; width: 92vw; }
+            .modal-input { font-size: 0.9em; padding: 8px 10px; }
+            /* Layer dropdown: anchor to right, cap width */
+            .layer-dropdown { min-width: 180px; max-width: calc(100vw - 40px); right: 0; }
+            .ld-item { padding: 6px 10px; font-size: 0.78em; }
+            /* Filter modal */
+            #filter-modal-overlay .modal-box { width: 92vw; padding: 18px 14px 14px; }
+            /* Details cards */
+            .detail-card { padding: 14px 12px; }
+            .detail-card h3 { font-size: 0.82em; margin-bottom: 8px; }
+            .upload-zone { padding: 20px 12px; }
+            .upload-zone-icon { font-size: 1.5em; }
+            .upload-zone-text { font-size: 0.82em; }
+            .gpx-actions { flex-wrap: wrap; gap: 6px; }
+            .btn { padding: 8px 14px; font-size: 0.82em; }
+            .poi-actions { flex-wrap: wrap; gap: 6px; }
+            .poi-actions .btn { font-size: 0.72em; padding: 5px 10px; }
+            .poi-list { max-height: 180px; }
         }
         @media (min-width: 769px) and (max-height: 900px) {
             #map { height: calc(100vh - 48px - 320px); min-height: 250px; }
@@ -496,6 +544,12 @@
         }
         @media (min-width: 1100px) {
             .map-area, .content-area { border-radius: 0 0 var(--radius) var(--radius); }
+        }
+        /* Very small screens: iPhone SE */
+        @media (max-width: 375px) {
+            .navbar-actions .navbar-btn#upload-btn-card2 { display: none; }
+            .stat-value { font-size: 0.9em; }
+            .stat-icon { font-size: 1em; }
         }
     </style>
 </head>
@@ -513,6 +567,11 @@
             <button class="navbar-btn" id="upload-btn-card2" data-i18n="nav.upload">📤 上传</button>
             <button class="navbar-btn" id="download-btn" disabled data-i18n="nav.gpx">⬇️ GPX</button>
             <button class="navbar-btn" id="download-kmz-btn" disabled data-i18n="nav.kmz">⬇️ KMZ</button>
+            <button class="navbar-btn" id="download-menu-btn">⬇</button>
+        </div>
+        <div class="download-dropdown" id="download-dropdown">
+            <button class="dd-item" id="dd-gpx" disabled>⬇ GPX</button>
+            <button class="dd-item" id="dd-kmz" disabled>⬇ KMZ</button>
         </div>
     </div>
 </nav>
@@ -1217,8 +1276,11 @@ if (!window.L) {
     function syncDownloadBtns() {
         const nGpx = document.getElementById('download-btn'), nKmz = document.getElementById('download-kmz-btn');
         const cGpx = document.getElementById('download-btn-card'), cKmz = document.getElementById('download-kmz-btn-card');
+        const ddGpx = document.getElementById('dd-gpx'), ddKmz = document.getElementById('dd-kmz');
         if (cGpx) cGpx.disabled = nGpx.disabled;
         if (cKmz) cKmz.disabled = nKmz.disabled;
+        if (ddGpx) ddGpx.disabled = nGpx.disabled;
+        if (ddKmz) ddKmz.disabled = nKmz.disabled;
     }
 
     function renderTrack(points) {
@@ -1901,6 +1963,19 @@ if (!window.L) {
             state.map.setView([parseFloat(btn.dataset.lat), parseFloat(btn.dataset.lng)], 16);
         });
         document.getElementById('poi-modal-close').addEventListener('click', () => document.getElementById('poi-modal-overlay').classList.remove('show'));
+
+        // Mobile download dropdown
+        const dlMenuBtn = document.getElementById('download-menu-btn');
+        const dlDropdown = document.getElementById('download-dropdown');
+        if (dlMenuBtn) {
+            dlMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dlDropdown.classList.toggle('show');
+            });
+            document.addEventListener('click', () => dlDropdown.classList.remove('show'));
+            document.getElementById('dd-gpx').addEventListener('click', downloadGpx);
+            document.getElementById('dd-kmz').addEventListener('click', downloadKmz);
+        }
 
         // Theme & Lang buttons
         document.getElementById('theme-btn').addEventListener('click', toggleTheme);
