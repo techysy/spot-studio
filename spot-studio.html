@@ -565,14 +565,14 @@
             <button class="icon-btn" id="lang-btn" title="Language / 语言">🌐</button>
             <button class="icon-btn" id="theme-btn" title="Theme / 主题">🌙</button>
             <button class="navbar-btn" id="upload-btn-card2" data-i18n="nav.upload">📤 上传</button>
-            <button class="navbar-btn" id="download-btn" disabled data-i18n="nav.gpx">⬇️ GPX</button>
-            <button class="navbar-btn" id="download-kmz-btn" disabled data-i18n="nav.kmz">⬇️ KMZ</button>
+            <button class="navbar-btn" id="download-btn" disabled data-i18n="nav.gpx">⬇ GPX</button>
+            <button class="navbar-btn" id="download-kmz-btn" disabled data-i18n="nav.kmz">⬇ KMZ</button>
             <button class="navbar-btn" id="download-menu-btn">⬇</button>
         </div>
-        <div class="download-dropdown" id="download-dropdown">
-            <button class="dd-item" id="dd-gpx" disabled>⬇ GPX</button>
-            <button class="dd-item" id="dd-kmz" disabled>⬇ KMZ</button>
-        </div>
+    </div>
+    <div class="download-dropdown" id="download-dropdown">
+        <button class="dd-item" id="dd-gpx" disabled>⬇ GPX</button>
+        <button class="dd-item" id="dd-kmz" disabled>⬇ KMZ</button>
     </div>
 </nav>
 
@@ -1905,7 +1905,7 @@ if (!window.L) {
         document.getElementById('map-locate').addEventListener('click', () => {
             if (!navigator.geolocation) { alert(t("alert.no_loc")); return; }
             const btn = document.getElementById('map-locate'); btn.classList.add('active');
-            navigator.geolocation.getCurrentPosition(pos => { state.map.setView([pos.coords.latitude, pos.coords.longitude], 14); btn.classList.remove('active'); }, () => { alert(t("alert.loc_fail")); btn.classList.remove('active"); });
+            navigator.geolocation.getCurrentPosition(pos => { state.map.setView([pos.coords.latitude, pos.coords.longitude], 14); btn.classList.remove('active'); }, () => { alert(t("alert.loc_fail")); btn.classList.remove('active'); });
         });
 
         new MutationObserver(() => updateSubtitleToggle()).observe(document.getElementById('subtitle'), { childList: true, characterData: true, subtree: true });
